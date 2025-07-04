@@ -83,9 +83,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Wait a moment for the user to be fully created
         await new Promise(resolve => setTimeout(resolve, 100))
         
-        // Create profile with shipping information
+        // Create profile with all information including name
         const { error: profileError } = await supabase.from('profiles').insert({
           id: data.user.id,
+          full_name: userData.full_name || '',
           email: email,
           mobile_number: userData.mobile_number || null,
           alternate_mobile: userData.alternate_mobile || null,

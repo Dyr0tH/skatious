@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 
 interface ShippingInfo {
+  full_name: string
   email: string
   mobile_number: string
   alternate_mobile: string
@@ -20,6 +21,7 @@ export default function CheckoutPage() {
   const navigate = useNavigate()
   
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
+    full_name: '',
     email: '',
     mobile_number: '',
     alternate_mobile: '',
@@ -29,8 +31,6 @@ export default function CheckoutPage() {
     pin_code: '',
   })
   
-  const [codeDiscountPercentage, setCodeDiscountPercentage] = useState(0)
-  const [promoCode, setPromoCode] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -62,6 +62,7 @@ export default function CheckoutPage() {
 
         if (data) {
           setShippingInfo({
+            full_name: data.full_name || '',
             email: data.email || user.email || '',
             mobile_number: data.mobile_number || '',
             alternate_mobile: data.alternate_mobile || '',
@@ -86,27 +87,6 @@ export default function CheckoutPage() {
     }
   }
 
-  const validateDiscountCode = async () => {
-    if (!promoCode.trim()) return
-
-    try {
-      const { data } = await supabase
-        .from('discount_codes')
-        .select('discount_percentage')
-        .eq('code', promoCode.toUpperCase())
-        .eq('active', true)
-        .single()
-      
-      if (data) {
-        setCodeDiscountPercentage(data.discount_percentage)
-      } else {
-        alert('Invalid discount code')
-      }
-    } catch (error) {
-      alert('Invalid discount code')
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -119,10 +99,8 @@ export default function CheckoutPage() {
       }
 
       const totalPrice = getCartTotal()
-      const appliedDiscountPercentage = Math.max(discountPercentage, codeDiscountPercentage)
-      const discountAmount = (totalPrice * appliedDiscountPercentage) / 100
-      const finalPrice = discountCode ? getFinalTotal() : totalPrice - discountAmount
-      const appliedDiscountCode = discountCode || (codeDiscountPercentage > 0 ? promoCode : null)
+      const discountAmount = (totalPrice * discountPercentage) / 100
+      const finalPrice = getFinalTotal()
 
       // Create order
       const { data: order, error: orderError } = await supabase
@@ -131,8 +109,8 @@ export default function CheckoutPage() {
           user_id: user.id,
           total_amount: finalPrice,
           discount_amount: discountAmount,
-          discount_code: appliedDiscountCode,
-          discount_percentage: appliedDiscountPercentage,
+          discount_code: discountCode,
+          discount_percentage: discountPercentage,
           customer_email: shippingInfo.email,
           customer_mobile: shippingInfo.mobile_number,
           customer_alternate_mobile: shippingInfo.alternate_mobile,
@@ -177,6 +155,7 @@ export default function CheckoutPage() {
         .from('profiles')
         .upsert({
           id: user.id,
+          full_name: shippingInfo.full_name,
           email: shippingInfo.email,
           mobile_number: shippingInfo.mobile_number,
           alternate_mobile: shippingInfo.alternate_mobile,
@@ -207,8 +186,7 @@ export default function CheckoutPage() {
   }
 
   const totalPrice = getCartTotal()
-  const appliedDiscountPercentage = Math.max(discountPercentage, codeDiscountPercentage)
-  const finalPrice = discountCode ? getFinalTotal() : totalPrice * (1 - appliedDiscountPercentage / 100)
+  const finalPrice = getFinalTotal()
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -223,6 +201,20 @@ export default function CheckoutPage() {
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 font-heading mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    required
+                    value={shippingInfo.full_name}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 font-heading mb-1">
                     Email Address
@@ -325,32 +317,6 @@ export default function CheckoutPage() {
                 </div>
               </form>
             </div>
-
-            {/* Discount Code Section */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="font-heading text-lg font-semibold text-gray-900 mb-4">Discount Code</h3>
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Enter discount code"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
-                />
-                <button
-                  type="button"
-                  onClick={validateDiscountCode}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-heading font-medium transition-colors"
-                >
-                  Apply
-                </button>
-              </div>
-              {codeDiscountPercentage > 0 && (
-                <p className="mt-2 text-green-600 font-body">
-                  Discount code applied: {codeDiscountPercentage}% off
-                </p>
-              )}
-            </div>
           </div>
 
           <div className="space-y-6">
@@ -377,13 +343,13 @@ export default function CheckoutPage() {
                   <span>${totalPrice.toFixed(2)}</span>
                 </div>
                 
-                {(discountPercentage > 0 || codeDiscountPercentage > 0) && (
+                {discountPercentage > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span className="font-body">
-                      Discount ({appliedDiscountPercentage}%)
+                      Discount ({discountPercentage}%)
                       {discountCode && <span className="text-xs ml-1">({discountCode})</span>}
                     </span>
-                    <span>-${(totalPrice * appliedDiscountPercentage / 100).toFixed(2)}</span>
+                    <span>-${(totalPrice * discountPercentage / 100).toFixed(2)}</span>
                   </div>
                 )}
                 

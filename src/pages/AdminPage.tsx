@@ -42,6 +42,8 @@ interface Order {
   shipping_city: string
   shipping_pin_code: string
   created_at: string
+  user_id: string
+  customer_name?: string
   order_items: {
     product_name: string
     size: string
@@ -149,8 +151,9 @@ export default function AdminPage() {
         return
       }
 
-      // Get all order IDs
+      // Get all order IDs and user IDs
       const orderIds = ordersData.map(order => order.id)
+      const userIds = [...new Set(ordersData.map(order => order.user_id).filter(Boolean))]
 
       // Fetch order items for all orders
       const { data: orderItemsData, error: itemsError } = await supabase
@@ -163,9 +166,28 @@ export default function AdminPage() {
         return
       }
 
-      // Merge order items with orders
+      // Fetch user profiles for customer names
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds)
+
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError)
+      }
+
+      // Create a map of user IDs to names
+      const userNamesMap = new Map()
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          userNamesMap.set(profile.id, profile.full_name)
+        })
+      }
+
+      // Merge order items with orders and add customer names
       const ordersWithItems = ordersData.map(order => ({
         ...order,
+        customer_name: userNamesMap.get(order.user_id) || 'Unknown Customer',
         order_items: (orderItemsData || []).filter(item => item.order_id === order.id)
       }))
 
@@ -443,7 +465,8 @@ export default function AdminPage() {
                           <div className="text-sm text-gray-500 font-body">{order.order_items.length} items</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-gray-900 font-body">{order.customer_email}</div>
+                          <div className="font-medium text-gray-900 font-body">{order.customer_name}</div>
+                          <div className="text-sm text-gray-500 font-body">{order.customer_email}</div>
                           <div className="text-sm text-gray-500 font-body">{order.customer_mobile}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -748,6 +771,7 @@ export default function AdminPage() {
                   <div>
                     <h4 className="font-heading text-lg font-semibold text-gray-900 mb-3">Customer Information</h4>
                     <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Name:</span> {selectedOrder.customer_name}</div>
                       <div><span className="font-medium">Email:</span> {selectedOrder.customer_email}</div>
                       <div><span className="font-medium">Mobile:</span> {selectedOrder.customer_mobile}</div>
                       {selectedOrder.customer_alternate_mobile && (

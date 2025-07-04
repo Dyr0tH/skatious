@@ -1,14 +1,20 @@
 import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
+import { Phone, Mail, Shield } from 'lucide-react'
 
 export default function AuthPage() {
   const { user, signIn, signUp } = useAuth()
   const [isSignUp, setIsSignUp] = useState(false)
+  const [authMethod, setAuthMethod] = useState<'mobile' | 'email'>('mobile')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [otpLoading, setOtpLoading] = useState(false)
   
   const [formData, setFormData] = useState({
+    full_name: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -18,13 +24,82 @@ export default function AuthPage() {
     state: '',
     city: '',
     pin_code: '',
+    otp: '',
   })
 
   if (user) {
     return <Navigate to="/" replace />
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const sendOTP = async () => {
+    if (!formData.mobile_number) {
+      setError('Please enter your mobile number')
+      return
+    }
+
+    setOtpLoading(true)
+    setError('')
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: formData.mobile_number,
+      })
+
+      if (error) throw error
+
+      setOtpSent(true)
+      setError('')
+    } catch (error: any) {
+      setError(error.message || 'Failed to send OTP')
+    }
+
+    setOtpLoading(false)
+  }
+
+  const verifyOTP = async () => {
+    if (!formData.otp) {
+      setError('Please enter the OTP')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: formData.mobile_number,
+        token: formData.otp,
+        type: 'sms'
+      })
+
+      if (error) throw error
+
+      // If this is a new user (sign up), create their profile
+      if (data.user && isSignUp) {
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: data.user.id,
+          full_name: formData.full_name,
+          email: formData.email || data.user.email || '',
+          mobile_number: formData.mobile_number,
+          alternate_mobile: formData.alternate_mobile || null,
+          country: formData.country || null,
+          state: formData.state || null,
+          city: formData.city || null,
+          pin_code: formData.pin_code || null,
+        })
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError)
+        }
+      }
+    } catch (error: any) {
+      setError(error.message || 'Invalid OTP')
+    }
+
+    setLoading(false)
+  }
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -57,6 +132,12 @@ export default function AuthPage() {
     }))
   }
 
+  const resetForm = () => {
+    setOtpSent(false)
+    setError('')
+    setFormData(prev => ({ ...prev, otp: '' }))
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -69,90 +150,167 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
+        {/* Auth Method Toggle */}
+        {!isSignUp && (
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMethod('mobile')
+                resetForm()
+              }}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md font-heading font-medium text-sm transition-colors ${
+                authMethod === 'mobile'
+                  ? 'bg-white text-emerald-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <Phone className="h-4 w-4" />
+              <span>Mobile OTP</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMethod('email')
+                resetForm()
+              }}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md font-heading font-medium text-sm transition-colors ${
+                authMethod === 'email'
+                  ? 'bg-white text-emerald-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <Mail className="h-4 w-4" />
+              <span>Email</span>
+            </button>
+          </div>
+        )}
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 font-heading">
-                Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
-              />
-            </div>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 font-heading">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
-              />
-            </div>
+        {/* Mobile OTP Authentication */}
+        {(authMethod === 'mobile' || isSignUp) && (
+          <div className="space-y-6">
+            {isSignUp && (
+              <div>
+                <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 font-heading">
+                  Full Name
+                </label>
+                <input
+                  id="full_name"
+                  name="full_name"
+                  type="text"
+                  required
+                  value={formData.full_name}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                />
+              </div>
+            )}
 
             {isSignUp && (
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 font-heading">
+                  Email Address (Optional)
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                />
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="mobile_number" className="block text-sm font-medium text-gray-700 font-heading">
+                Mobile Number
+              </label>
+              <div className="mt-1 flex space-x-2">
+                <input
+                  id="mobile_number"
+                  name="mobile_number"
+                  type="tel"
+                  required
+                  value={formData.mobile_number}
+                  onChange={handleChange}
+                  disabled={otpSent}
+                  placeholder="+1234567890"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body disabled:bg-gray-50"
+                />
+                {!otpSent ? (
+                  <button
+                    type="button"
+                    onClick={sendOTP}
+                    disabled={otpLoading || !formData.mobile_number}
+                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white px-4 py-2 rounded-lg font-heading font-medium transition-colors duration-200"
+                  >
+                    {otpLoading ? 'Sending...' : 'Send OTP'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-heading font-medium transition-colors duration-200"
+                  >
+                    Change
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {otpSent && (
+              <div>
+                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 font-heading">
+                  <Shield className="h-4 w-4 inline mr-1" />
+                  Enter OTP
+                </label>
+                <div className="mt-1 flex space-x-2">
+                  <input
+                    id="otp"
+                    name="otp"
+                    type="text"
+                    required
+                    value={formData.otp}
+                    onChange={handleChange}
+                    placeholder="123456"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                  />
+                  <button
+                    type="button"
+                    onClick={verifyOTP}
+                    disabled={loading || !formData.otp}
+                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white px-4 py-2 rounded-lg font-heading font-medium transition-colors duration-200"
+                  >
+                    {loading ? 'Verifying...' : 'Verify'}
+                  </button>
+                </div>
+                <p className="mt-2 text-sm text-gray-600 font-body">
+                  OTP sent to {formData.mobile_number}
+                </p>
+              </div>
+            )}
+
+            {isSignUp && otpSent && (
               <>
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 font-heading">
-                    Confirm Password
+                  <label htmlFor="alternate_mobile" className="block text-sm font-medium text-gray-700 font-heading">
+                    Alternate Mobile
                   </label>
                   <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    required
-                    value={formData.confirmPassword}
+                    id="alternate_mobile"
+                    name="alternate_mobile"
+                    type="tel"
+                    value={formData.alternate_mobile}
                     onChange={handleChange}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="mobile_number" className="block text-sm font-medium text-gray-700 font-heading">
-                      Mobile Number
-                    </label>
-                    <input
-                      id="mobile_number"
-                      name="mobile_number"
-                      type="tel"
-                      required
-                      value={formData.mobile_number}
-                      onChange={handleChange}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="alternate_mobile" className="block text-sm font-medium text-gray-700 font-heading">
-                      Alternate Mobile
-                    </label>
-                    <input
-                      id="alternate_mobile"
-                      name="alternate_mobile"
-                      type="tel"
-                      value={formData.alternate_mobile}
-                      onChange={handleChange}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
-                    />
-                  </div>
                 </div>
 
                 <div>
@@ -219,27 +377,64 @@ export default function AuthPage() {
               </>
             )}
           </div>
+        )}
 
-          <div>
+        {/* Email Authentication */}
+        {authMethod === 'email' && !isSignUp && (
+          <form onSubmit={handleEmailAuth} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 font-heading">
+                Email Address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 font-heading">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={loading}
               className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white py-2 px-4 rounded-lg font-heading font-semibold transition-colors duration-200"
             >
-              {loading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
+              {loading ? 'Please wait...' : 'Sign In'}
             </button>
-          </div>
+          </form>
+        )}
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-emerald-600 hover:text-emerald-700 font-heading font-medium"
-            >
-              {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-            </button>
-          </div>
-        </form>
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setIsSignUp(!isSignUp)
+              resetForm()
+              setAuthMethod('mobile')
+            }}
+            className="text-emerald-600 hover:text-emerald-700 font-heading font-medium"
+          >
+            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+          </button>
+        </div>
       </div>
     </div>
   )

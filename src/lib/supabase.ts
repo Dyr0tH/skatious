@@ -86,6 +86,7 @@ export type Database = {
       profiles: {
         Row: {
           id: string
+          full_name: string
           email: string
           mobile_number: string | null
           alternate_mobile: string | null
@@ -97,6 +98,7 @@ export type Database = {
         }
         Insert: {
           id: string
+          full_name: string
           email: string
           mobile_number?: string | null
           alternate_mobile?: string | null
@@ -108,6 +110,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          full_name?: string
           email?: string
           mobile_number?: string | null
           alternate_mobile?: string | null
@@ -224,6 +227,126 @@ export type Database = {
           product_id?: string
           size?: string
           quantity?: number
+          created_at?: string
+        }
+      }
+      orders: {
+        Row: {
+          id: string
+          user_id: string | null
+          order_number: string
+          status: string
+          total_amount: number
+          discount_amount: number
+          discount_code: string | null
+          discount_percentage: number | null
+          customer_email: string
+          customer_mobile: string
+          customer_alternate_mobile: string | null
+          shipping_country: string
+          shipping_state: string
+          shipping_city: string
+          shipping_pin_code: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          order_number?: string
+          status?: string
+          total_amount?: number
+          discount_amount?: number
+          discount_code?: string | null
+          discount_percentage?: number | null
+          customer_email: string
+          customer_mobile: string
+          customer_alternate_mobile?: string | null
+          shipping_country: string
+          shipping_state: string
+          shipping_city: string
+          shipping_pin_code: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          order_number?: string
+          status?: string
+          total_amount?: number
+          discount_amount?: number
+          discount_code?: string | null
+          discount_percentage?: number | null
+          customer_email?: string
+          customer_mobile?: string
+          customer_alternate_mobile?: string | null
+          shipping_country?: string
+          shipping_state?: string
+          shipping_city?: string
+          shipping_pin_code?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          product_id: string
+          product_name: string
+          product_price: number
+          size: string
+          quantity: number
+          item_total: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          product_id: string
+          product_name: string
+          product_price: number
+          size: string
+          quantity?: number
+          item_total: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          product_id?: string
+          product_name?: string
+          product_price?: number
+          size?: string
+          quantity?: number
+          item_total?: number
+          created_at?: string
+        }
+      }
+      order_status_history: {
+        Row: {
+          id: string
+          order_id: string
+          status: string
+          changed_by: string | null
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          status: string
+          changed_by?: string | null
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          status?: string
+          changed_by?: string | null
+          notes?: string | null
           created_at?: string
         }
       }

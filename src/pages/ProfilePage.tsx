@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 
 interface Profile {
+  full_name: string
   email: string
   mobile_number: string
   alternate_mobile: string
@@ -50,6 +51,7 @@ export default function ProfilePage() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('profile')
   const [profile, setProfile] = useState<Profile>({
+    full_name: '',
     email: '',
     mobile_number: '',
     alternate_mobile: '',
@@ -70,6 +72,15 @@ export default function ProfilePage() {
     }
   }, [user])
 
+  // Check URL params for tab
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const tab = urlParams.get('tab')
+    if (tab === 'orders') {
+      setActiveTab('orders')
+    }
+  }, [])
+
   if (!user) {
     return <Navigate to="/auth" replace />
   }
@@ -89,6 +100,7 @@ export default function ProfilePage() {
 
       if (data) {
         setProfile({
+          full_name: data.full_name || '',
           email: data.email || user.email || '',
           mobile_number: data.mobile_number || '',
           alternate_mobile: data.alternate_mobile || '',
@@ -163,6 +175,7 @@ export default function ProfilePage() {
         .from('profiles')
         .upsert({
           id: user.id,
+          full_name: profile.full_name,
           email: profile.email,
           mobile_number: profile.mobile_number,
           alternate_mobile: profile.alternate_mobile,
@@ -208,7 +221,9 @@ export default function ProfilePage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold text-navy-900">My Account</h1>
-          <p className="font-body text-gray-600 mt-2">Manage your profile and view your orders</p>
+          <p className="font-body text-gray-600 mt-2">
+            Welcome back, {profile.full_name || 'User'}! Manage your profile and view your orders
+          </p>
         </div>
 
         {/* Tab Navigation */}
@@ -279,6 +294,21 @@ export default function ProfilePage() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-heading mb-1">
+                  <User className="h-4 w-4 inline mr-1" />
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  name="full_name"
+                  value={profile.full_name}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body disabled:bg-gray-50"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 font-heading mb-1">
                   <Mail className="h-4 w-4 inline mr-1" />
