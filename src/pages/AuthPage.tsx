@@ -271,26 +271,16 @@ export default function AuthPage() {
                   <Shield className="h-4 w-4 inline mr-1" />
                   Enter OTP
                 </label>
-                <div className="mt-1 flex space-x-2">
-                  <input
-                    id="otp"
-                    name="otp"
-                    type="text"
-                    required
-                    value={formData.otp}
-                    onChange={handleChange}
-                    placeholder="123456"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
-                  />
-                  <button
-                    type="button"
-                    onClick={verifyOTP}
-                    disabled={loading || !formData.otp}
-                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white px-4 py-2 rounded-lg font-heading font-medium transition-colors duration-200"
-                  >
-                    {loading ? 'Verifying...' : 'Verify'}
-                  </button>
-                </div>
+                <input
+                  id="otp"
+                  name="otp"
+                  type="text"
+                  required
+                  value={formData.otp}
+                  onChange={handleChange}
+                  placeholder="123456"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                />
                 <p className="mt-2 text-sm text-gray-600 font-body">
                   OTP sent to {formData.mobile_number}
                 </p>
@@ -374,7 +364,29 @@ export default function AuthPage() {
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-body"
                   />
                 </div>
+
+                {/* Verify and Signup Button - Moved to the end */}
+                <button
+                  type="button"
+                  onClick={verifyOTP}
+                  disabled={loading || !formData.otp}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white py-3 px-4 rounded-lg font-heading font-semibold text-lg transition-colors duration-200"
+                >
+                  {loading ? 'Verifying...' : 'Verify and Signup'}
+                </button>
               </>
+            )}
+
+            {/* Sign In with Mobile OTP */}
+            {!isSignUp && otpSent && (
+              <button
+                type="button"
+                onClick={verifyOTP}
+                disabled={loading || !formData.otp}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white py-3 px-4 rounded-lg font-heading font-semibold text-lg transition-colors duration-200"
+              >
+                {loading ? 'Verifying...' : 'Verify and Sign In'}
+              </button>
             )}
           </div>
         )}
