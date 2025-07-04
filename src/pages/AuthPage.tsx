@@ -30,6 +30,25 @@ export default function AuthPage() {
     return <Navigate to="/" replace />
   }
 
+  const checkUserExists = async (mobileNumber: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('mobile_number', mobileNumber)
+        .maybeSingle()
+
+      if (error && error.code !== 'PGRST116') {
+        throw error
+      }
+
+      return !!data
+    } catch (error) {
+      console.error('Error checking user existence:', error)
+      return false
+    }
+  }
+
   const sendOTP = async () => {
     if (!formData.mobile_number) {
       setError('Please enter your mobile number')
@@ -40,6 +59,16 @@ export default function AuthPage() {
     setError('')
 
     try {
+      // For sign-in, check if user exists first
+      if (!isSignUp) {
+        const userExists = await checkUserExists(formData.mobile_number)
+        if (!userExists) {
+          setError('No account found with this mobile number. Please sign up first.')
+          setOtpLoading(false)
+          return
+        }
+      }
+
       const { error } = await supabase.auth.signInWithOtp({
         phone: formData.mobile_number,
       })
@@ -73,6 +102,18 @@ export default function AuthPage() {
 
       if (error) throw error
 
+      // If this is sign-in, verify the user exists in our profiles table
+      if (!isSignUp && data.user) {
+        const userExists = await checkUserExists(formData.mobile_number)
+        if (!userExists) {
+          // Sign out the user immediately if they don't exist in our system
+          await supabase.auth.signOut()
+          setError('Account not found. Please sign up first.')
+          setLoading(false)
+          return
+        }
+      }
+
       // If this is a new user (sign up), create their profile
       if (data.user && isSignUp) {
         const { error: profileError } = await supabase.from('profiles').insert({
@@ -89,6 +130,11 @@ export default function AuthPage() {
 
         if (profileError) {
           console.error('Error creating profile:', profileError)
+          // If profile creation fails, sign out the user
+          await supabase.auth.signOut()
+          setError('Failed to create profile. Please try again.')
+          setLoading(false)
+          return
         }
       }
     } catch (error: any) {
