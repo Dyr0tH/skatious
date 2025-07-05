@@ -78,6 +78,8 @@ export default function AdminPage() {
   const [showProductForm, setShowProductForm] = useState(false)
   const [showDiscountForm, setShowDiscountForm] = useState(false)
   const [editingItem, setEditingItem] = useState<any>(null)
+  const [customers, setCustomers] = useState<any[]>([])
+  const [customerSearch, setCustomerSearch] = useState('')
 
   const [categoryForm, setCategoryForm] = useState({ name: '', description: '' })
   const [productForm, setProductForm] = useState({
@@ -99,6 +101,13 @@ export default function AdminPage() {
       loadData()
     }
   }, [user, isAdmin])
+
+  useEffect(() => {
+    if (activeTab === 'customers') {
+      loadCustomers()
+    }
+    // eslint-disable-next-line
+  }, [activeTab])
 
   if (!user || !isAdmin) {
     return (
@@ -204,6 +213,12 @@ export default function AdminPage() {
       .eq('id', SPECIAL_DISCOUNT_SETTINGS_ID)
       .maybeSingle()
     setSpecialDiscountActive(data?.active || false)
+  }
+
+  // loading customers from the database for admin to see
+  const loadCustomers = async () => {
+    const { data } = await supabase.from('profiles').select('full_name, email, mobile_number')
+    setCustomers(data || [])
   }
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -400,6 +415,7 @@ export default function AdminPage() {
                 { id: 'orders', name: 'Orders', icon: ShoppingBag },
                 { id: 'products', name: 'Products', icon: Package },
                 { id: 'categories', name: 'Categories', icon: Tag },
+                { id: 'customers', name: 'Customers', icon: Users},
                 { id: 'discounts', name: 'Discounts', icon: Settings },
               ].map((tab) => {
                 const Icon = tab.icon
@@ -529,62 +545,109 @@ export default function AdminPage() {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Price
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Sizes
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {products.map((product) => (
-                    <tr key={product.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900 font-heading">{product.name}</div>
-                        <div className="text-sm text-gray-500 font-body">{product.description}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-body">
-                        {product.categories?.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-body">
-                        ${product.price.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-body">
-                        {product.sizes.join(', ')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => startEdit(product, 'product')}
-                            className="text-emerald-600 hover:text-emerald-900"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete('products', product.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Product Details
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Category
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Available Sizes
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {products.map((product) => (
+                      <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
+                        <td className="px-6 py-4">
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0">
+                              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                <Package className="h-6 w-6 text-emerald-600" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-gray-900 font-heading text-sm leading-5">
+                                {product.name}
+                              </div>
+                              <div className="text-sm text-gray-500 font-body mt-1 line-clamp-2">
+                                {product.description}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                            {product.categories?.name || 'Uncategorized'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-semibold text-gray-900 font-body">
+                            ${product.price.toFixed(2)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1">
+                            {product.sizes.map((size, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
+                              >
+                                {size}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => startEdit(product, 'product')}
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-emerald-700 bg-emerald-100 hover:bg-emerald-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-150"
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete('products', product.id)}
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-150"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {products.length === 0 && (
+                <div className="text-center py-12">
+                  <Package className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900 font-heading">No products</h3>
+                  <p className="mt-1 text-sm text-gray-500 font-body">Get started by creating a new product.</p>
+                  <div className="mt-6">
+                    <button
+                      onClick={() => setShowProductForm(true)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Product
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -629,6 +692,72 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Customers Tab */}
+        {activeTab === 'customers' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="font-heading text-xl font-semibold text-gray-900">Customers</h2>
+              <div className="text-sm text-gray-600 font-body">
+                {customers.length} total customers
+              </div>
+            </div>
+            <div className="mb-4">
+              <input
+                type="text"
+                value={customerSearch}
+                onChange={e => setCustomerSearch(e.target.value)}
+                placeholder="Search by name, email, or mobile..."
+                className="w-full md:w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
+              />
+            </div>
+            {(() => {
+              const search = customerSearch.trim().toLowerCase();
+              const filtered = !search
+                ? customers
+                : customers.filter((customer: any) => {
+                    const name = (customer.full_name || customer.name || '').toLowerCase().trim();
+                    const email = (customer.email || '').toLowerCase().trim();
+                    const mobile = (customer.mobile_number || '').toLowerCase().trim();
+                    return (
+                      (name && name.includes(search)) ||
+                      (email && email.includes(search)) ||
+                      (mobile && mobile.includes(search))
+                    );
+                  });
+              return (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filtered.length === 0 ? (
+                    <div className="col-span-full text-center text-gray-500 font-body">
+                      No customers found.
+                    </div>
+                  ) : (
+                    filtered.map((customer: any, idx: number) => (
+                      <div key={customer.email || customer.id || idx} className="bg-white rounded-xl shadow-sm p-6 flex flex-col space-y-2">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <Users className="h-6 w-6 text-emerald-500" />
+                          <h3 className="font-heading text-lg font-semibold text-gray-900">
+                            {customer.full_name || customer.name || customer.email || 'Unnamed'}
+                          </h3>
+                        </div>
+                        <div className="font-body text-gray-700">
+                          <div>
+                            <span className="font-medium">Email:</span>{' '}
+                            {customer.email || <span className="text-gray-400">N/A</span>}
+                          </div>
+                          <div>
+                            <span className="font-medium">Mobile:</span>{' '}
+                            {customer.mobile_number || <span className="text-gray-400">N/A</span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
 
