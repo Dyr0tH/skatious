@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, Package, Tag, Settings, Users, ShoppingBag, Eye, X } from 'lucide-react'
+import { Plus, Edit, Trash2, Package, Tag, Settings, Users, ShoppingBag, Eye, X, Upload } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import ImageUpload from '../components/ImageUpload'
 
 interface Category {
   id: string
@@ -88,8 +89,10 @@ export default function AdminPage() {
     price: 0,
     category_id: '',
     sizes: [''],
-    image_urls: ['']
+    image_urls: [] as string[]
   })
+  const [pendingImages, setPendingImages] = useState<File[]>([])
+  const [uploadPendingImagesFn, setUploadPendingImagesFn] = useState<(() => Promise<string[]>) | null>(null)
   const [discountForm, setDiscountForm] = useState({
     code: '',
     discount_percentage: 0,
@@ -133,7 +136,11 @@ export default function AdminPage() {
   const loadProducts = async () => {
     const { data } = await supabase
       .from('products')
-      .select('*, categories(name)')
+      .select(`
+        *,
+        categories(name),
+        product_images(image_url, order_index)
+      `)
     setProducts(data || [])
   }
 
@@ -281,6 +288,18 @@ export default function AdminPage() {
     }
 
     if (productId) {
+      // Upload pending images first
+      let finalImageUrls = productForm.image_urls
+      if (uploadPendingImagesFn && pendingImages.length > 0) {
+        try {
+          finalImageUrls = await uploadPendingImagesFn()
+        } catch (error) {
+          console.error('Error uploading images:', error)
+          alert('Failed to upload some images. Please try again.')
+          return
+        }
+      }
+
       if (editingItem) {
         await supabase
           .from('product_images')
@@ -288,7 +307,7 @@ export default function AdminPage() {
           .eq('product_id', productId)
       }
 
-      const imageInserts = productForm.image_urls
+      const imageInserts = finalImageUrls
         .filter(url => url.trim() !== '')
         .map((url, index) => ({
           product_id: productId,
@@ -308,8 +327,10 @@ export default function AdminPage() {
       price: 0,
       category_id: '',
       sizes: [''],
-      image_urls: ['']
+      image_urls: []
     })
+    setPendingImages([])
+    setUploadPendingImagesFn(null)
     setShowProductForm(false)
     setEditingItem(null)
     loadProducts()
@@ -355,6 +376,19 @@ export default function AdminPage() {
     setSpecialDiscountActive(newState)
   }
 
+  const handleImagesUploaded = (imageUrls: string[]) => {
+    // Only update with existing images, not pending ones
+    setProductForm(prev => ({ ...prev, image_urls: imageUrls }))
+  }
+
+  const handlePendingImagesChange = (pendingImages: File[]) => {
+    setPendingImages(pendingImages)
+  }
+
+  const handleUploadPendingImages = (uploadFn: () => Promise<string[]>) => {
+    setUploadPendingImagesFn(() => uploadFn)
+  }
+
   const startEdit = (item: any, type: string) => {
     setEditingItem(item)
     
@@ -362,14 +396,19 @@ export default function AdminPage() {
       setCategoryForm({ name: item.name, description: item.description })
       setShowCategoryForm(true)
     } else if (type === 'product') {
+      // Get existing images for this product
+      const existingImages = item.product_images?.map((img: any) => img.image_url) || []
+      
       setProductForm({
         name: item.name,
         description: item.description,
         price: item.price,
         category_id: item.category_id,
         sizes: item.sizes.length ? item.sizes : [''],
-        image_urls: ['']
+        image_urls: existingImages
       })
+      setPendingImages([])
+      setUploadPendingImagesFn(null)
       setShowProductForm(true)
     } else if (type === 'discount') {
       setDiscountForm({
@@ -499,10 +538,10 @@ export default function AdminPage() {
                           </select>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-gray-900 font-body">${order.total_amount.toFixed(2)}</div>
+                          <div className="font-medium text-gray-900 font-body">₹{order.total_amount.toFixed(2)}</div>
                           {order.discount_amount > 0 && (
                             <div className="text-sm text-green-600 font-body">
-                              -${order.discount_amount.toFixed(2)}
+                              -₹{order.discount_amount.toFixed(2)}
                             </div>
                           )}
                         </td>
@@ -593,7 +632,7 @@ export default function AdminPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-semibold text-gray-900 font-body">
-                            ${product.price.toFixed(2)}
+                            ₹{product.price.toFixed(2)}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -928,7 +967,7 @@ export default function AdminPage() {
                         <span className="font-body text-gray-700">
                           {item.product_name} ({item.size}) × {item.quantity}
                         </span>
-                        <span className="font-semibold">${item.item_total.toFixed(2)}</span>
+                        <span className="font-semibold">₹{item.item_total.toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -940,19 +979,19 @@ export default function AdminPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
-                      <span>${(selectedOrder.total_amount + selectedOrder.discount_amount).toFixed(2)}</span>
+                      <span>₹{(selectedOrder.total_amount + selectedOrder.discount_amount).toFixed(2)}</span>
                     </div>
                     {selectedOrder.discount_amount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>
                           Discount {selectedOrder.discount_code && `(${selectedOrder.discount_code})`}:
                         </span>
-                        <span>-${selectedOrder.discount_amount.toFixed(2)}</span>
+                        <span>-₹{selectedOrder.discount_amount.toFixed(2)}</span>
                       </div>
                     )}
                     <div className="flex justify-between font-semibold text-lg border-t border-gray-300 pt-2">
                       <span>Total:</span>
-                      <span>${selectedOrder.total_amount.toFixed(2)}</span>
+                      <span>₹{selectedOrder.total_amount.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -1125,40 +1164,27 @@ export default function AdminPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 font-heading mb-1">
-                    Image URLs
+                    Product Images
                   </label>
-                  {productForm.image_urls.map((url, index) => (
-                    <div key={index} className="flex space-x-2 mb-2">
-                      <input
-                        type="url"
-                        value={url}
-                        onChange={(e) => {
-                          const newUrls = [...productForm.image_urls]
-                          newUrls[index] = e.target.value
-                          setProductForm(prev => ({ ...prev, image_urls: newUrls }))
-                        }}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
-                        placeholder="https://example.com/image.jpg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newUrls = productForm.image_urls.filter((_, i) => i !== index)
-                          setProductForm(prev => ({ ...prev, image_urls: newUrls }))
-                        }}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                  {editingItem ? (
+                    <ImageUpload
+                      productId={editingItem.id}
+                      onImagesUploaded={handleImagesUploaded}
+                      existingImages={productForm.image_urls}
+                      onPendingImagesChange={handlePendingImagesChange}
+                      onUploadPendingImages={handleUploadPendingImages}
+                    />
+                  ) : (
+                    <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                      <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-gray-500 font-body">
+                        Images can be uploaded after the product is created
+                      </p>
+                      <p className="text-sm text-gray-400 font-body mt-2">
+                        Save the product first, then edit to add images
+                      </p>
                     </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => setProductForm(prev => ({ ...prev, image_urls: [...prev.image_urls, ''] }))}
-                    className="text-emerald-600 hover:text-emerald-800 text-sm font-heading"
-                  >
-                    + Add Image
-                  </button>
+                  )}
                 </div>
 
                 <div className="flex space-x-3 pt-4">
@@ -1179,8 +1205,10 @@ export default function AdminPage() {
                         price: 0,
                         category_id: '',
                         sizes: [''],
-                        image_urls: ['']
+                        image_urls: []
                       })
+                      setPendingImages([])
+                      setUploadPendingImagesFn(null)
                     }}
                     className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg font-heading font-medium"
                   >

@@ -4,6 +4,13 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 
+// Declare Razorpay types
+declare global {
+  interface Window {
+    Razorpay: any
+  }
+}
+
 interface ShippingInfo {
   full_name: string
   email: string
@@ -32,6 +39,13 @@ export default function CheckoutPage() {
   })
   
   const [loading, setLoading] = useState(false)
+  const [paymentProcessing, setPaymentProcessing] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentModalData, setPaymentModalData] = useState<{
+    type: 'success' | 'failure' | 'cancelled'
+    message: string
+    orderNumber?: string
+  } | null>(null)
 
   useEffect(() => {
     if (items.length === 0) {
@@ -87,57 +101,82 @@ export default function CheckoutPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
+  const initializeRazorpayPayment = async (orderInfo: any, finalPrice: number) => {
     try {
-      if (!user) {
-        alert('Please sign in to place an order')
-        navigate('/auth')
-        return
+      // Generate a temporary order number for display
+      const tempOrderNumber = `TEMP_${Date.now()}_${Math.random().toString(36).substring(2)}`
+      
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_ttH1OvFMvqEQfK',
+        amount: Math.round(finalPrice * 100), // Razorpay expects amount in paise
+        currency: 'INR',
+        name: 'SKATIOUS',
+        description: `Order #${tempOrderNumber}`,
+        receipt: tempOrderNumber,
+        handler: async (response: any) => {
+          // Payment successful - now create the order
+          await handlePaymentSuccess(orderInfo, response)
+        },
+        prefill: {
+          name: shippingInfo.full_name,
+          email: shippingInfo.email,
+          contact: shippingInfo.mobile_number
+        },
+        theme: {
+          color: '#059669' // emerald-600
+        },
+        modal: {
+          ondismiss: () => {
+            setPaymentProcessing(false)
+            setLoading(false)
+            // Show custom modal for cancelled payment
+            setPaymentModalData({
+              type: 'cancelled',
+              message: 'Payment was cancelled. No order was created.'
+            })
+            setShowPaymentModal(true)
+          }
+        }
       }
 
-      const totalPrice = getCartTotal()
-      const discountAmount = (totalPrice * discountPercentage) / 100
-      const finalPrice = getFinalTotal()
+      const razorpay = new window.Razorpay(options)
+      razorpay.open()
+    } catch (error) {
+      console.error('Error initializing Razorpay:', error)
+      setPaymentProcessing(false)
+      setLoading(false)
+      setPaymentModalData({
+        type: 'failure',
+        message: 'Error initializing payment. Please try again.'
+      })
+      setShowPaymentModal(true)
+    }
+  }
 
-      // Create order
+  const handlePaymentSuccess = async (orderInfo: any, paymentResponse: any) => {
+    try {
+      // Create order in database after successful payment
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
-          user_id: user.id,
-          total_amount: finalPrice,
-          discount_amount: discountAmount,
-          discount_code: discountCode,
-          discount_percentage: discountPercentage,
-          customer_email: shippingInfo.email,
-          customer_mobile: shippingInfo.mobile_number,
-          customer_alternate_mobile: shippingInfo.alternate_mobile,
-          shipping_country: shippingInfo.country,
-          shipping_state: shippingInfo.state,
-          shipping_city: shippingInfo.city,
-          shipping_pin_code: shippingInfo.pin_code,
-          status: 'pending'
+          ...orderInfo.orderData,
+          status: 'processing',
+          payment_id: paymentResponse.razorpay_payment_id,
+          payment_method: 'razorpay'
         })
         .select()
         .single()
 
       if (orderError) {
         console.error('Error creating order:', orderError)
-        alert('Error placing order. Please try again.')
+        alert('Payment successful but there was an error creating your order. Please contact support.')
         return
       }
 
       // Create order items
-      const orderItems = items.map(item => ({
+      const orderItems = orderInfo.orderItemsData.map((item: any) => ({
         order_id: order.id,
-        product_id: item.product_id,
-        product_name: item.product?.name || 'Unknown Product',
-        product_price: item.product?.price || 0,
-        size: item.size,
-        quantity: item.quantity,
-        item_total: (item.product?.price || 0) * item.quantity
+        ...item
       }))
 
       const { error: itemsError } = await supabase
@@ -146,7 +185,7 @@ export default function CheckoutPage() {
 
       if (itemsError) {
         console.error('Error creating order items:', itemsError)
-        alert('Error placing order. Please try again.')
+        alert('Payment successful but there was an error creating your order items. Please contact support.')
         return
       }
 
@@ -154,7 +193,7 @@ export default function CheckoutPage() {
       await supabase
         .from('profiles')
         .upsert({
-          id: user.id,
+          id: user!.id,
           full_name: shippingInfo.full_name,
           email: shippingInfo.email,
           mobile_number: shippingInfo.mobile_number,
@@ -168,14 +207,83 @@ export default function CheckoutPage() {
       // Clear cart
       await clearCart()
       
-      alert(`Order placed successfully! Order number: ${order.order_number}`)
-      navigate('/profile?tab=orders')
+      // Show success modal
+      setPaymentModalData({
+        type: 'success',
+        message: 'Payment successful!',
+        orderNumber: order.order_number
+      })
+      setShowPaymentModal(true)
     } catch (error) {
-      console.error('Error placing order:', error)
-      alert('Error placing order. Please try again.')
+      console.error('Error handling payment success:', error)
+      setPaymentModalData({
+        type: 'failure',
+        message: 'Payment successful but there was an error creating your order. Please contact support.'
+      })
+      setShowPaymentModal(true)
+    } finally {
+      setPaymentProcessing(false)
     }
+  }
 
-    setLoading(false)
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setPaymentProcessing(true)
+
+    try {
+      if (!user) {
+        alert('Please sign in to place an order')
+        navigate('/auth')
+        return
+      }
+
+      const totalPrice = getCartTotal()
+      const discountAmount = (totalPrice * discountPercentage) / 100
+      const finalPrice = getFinalTotal()
+
+      // Prepare order data (but don't save to database yet)
+      const orderData = {
+        user_id: user.id,
+        total_amount: finalPrice,
+        discount_amount: discountAmount,
+        discount_code: discountCode,
+        discount_percentage: discountPercentage,
+        customer_email: shippingInfo.email,
+        customer_mobile: shippingInfo.mobile_number,
+        customer_alternate_mobile: shippingInfo.alternate_mobile,
+        shipping_country: shippingInfo.country,
+        shipping_state: shippingInfo.state,
+        shipping_city: shippingInfo.city,
+        shipping_pin_code: shippingInfo.pin_code,
+        status: 'pending'
+      }
+
+      // Prepare order items data
+      const orderItemsData = items.map(item => ({
+        product_id: item.product_id,
+        product_name: item.product?.name || 'Unknown Product',
+        product_price: item.product?.price || 0,
+        size: item.size,
+        quantity: item.quantity,
+        item_total: (item.product?.price || 0) * item.quantity
+      }))
+
+      // Initialize Razorpay payment with order data
+      await initializeRazorpayPayment({ orderData, orderItemsData }, finalPrice)
+
+    } catch (error) {
+      console.error('Error preparing payment:', error)
+      setLoading(false)
+      setPaymentProcessing(false)
+      setPaymentModalData({
+        type: 'failure',
+        message: 'Error preparing payment. Please try again.'
+      })
+      setShowPaymentModal(true)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -331,7 +439,7 @@ export default function CheckoutPage() {
                       {item.product?.name || 'Product Not Found'} ({item.size}) × {item.quantity}
                     </span>
                     <span className="font-semibold">
-                      ${((item.product?.price || 0) * item.quantity).toFixed(2)}
+                      ₹{((item.product?.price || 0) * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -340,7 +448,7 @@ export default function CheckoutPage() {
               <div className="border-t border-gray-200 pt-4 space-y-2">
                 <div className="flex justify-between">
                   <span className="font-body text-gray-600">Subtotal</span>
-                  <span>${totalPrice.toFixed(2)}</span>
+                  <span>₹{totalPrice.toFixed(2)}</span>
                 </div>
                 
                 {discountPercentage > 0 && (
@@ -349,32 +457,112 @@ export default function CheckoutPage() {
                       Discount ({discountPercentage}%)
                       {discountCode && <span className="text-xs ml-1">({discountCode})</span>}
                     </span>
-                    <span>-${(totalPrice * discountPercentage / 100).toFixed(2)}</span>
+                    <span>-₹{(totalPrice * discountPercentage / 100).toFixed(2)}</span>
                   </div>
                 )}
                 
-                <div className="flex justify-between">
-                  <span className="font-body text-gray-600">Shipping</span>
-                  <span>Free</span>
-                </div>
-                
                 <div className="flex justify-between text-lg font-semibold text-gray-900 border-t border-gray-200 pt-2">
                   <span>Total</span>
-                  <span>${finalPrice.toFixed(2)}</span>
+                  <span>₹{finalPrice.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
             <button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || paymentProcessing}
               className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white py-3 px-4 rounded-lg font-heading font-semibold text-lg transition-colors duration-200"
             >
-              {loading ? 'Processing...' : `Place Order - $${finalPrice.toFixed(2)}`}
+              {loading ? 'Processing...' : paymentProcessing ? 'Opening Payment Gateway...' : `Pay ₹${finalPrice.toFixed(2)}`}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Payment Result Modal */}
+      {showPaymentModal && paymentModalData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 relative">
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setShowPaymentModal(false)
+                setPaymentModalData(null)
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="text-center">
+              {/* Icon */}
+              <div className="mx-auto mb-4">
+                {paymentModalData.type === 'success' ? (
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* Title */}
+              <h3 className={`font-heading text-xl font-semibold mb-2 ${
+                paymentModalData.type === 'success' ? 'text-green-800' : 'text-red-800'
+              }`}>
+                {paymentModalData.type === 'success' ? 'Payment Successful!' : 
+                 paymentModalData.type === 'cancelled' ? 'Payment Cancelled' : 'Payment Failed'}
+              </h3>
+
+              {/* Message */}
+              <p className="font-body text-gray-600 mb-4">
+                {paymentModalData.message}
+              </p>
+
+              {/* Order Number for Success */}
+              {paymentModalData.type === 'success' && paymentModalData.orderNumber && (
+                <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                  <p className="font-body text-sm text-gray-600">Order Number:</p>
+                  <p className="font-heading font-semibold text-gray-900">{paymentModalData.orderNumber}</p>
+                </div>
+              )}
+
+              {/* Buttons */}
+              <div className="flex space-x-3">
+                {paymentModalData.type === 'success' ? (
+                  <button
+                    onClick={() => {
+                      setShowPaymentModal(false)
+                      setPaymentModalData(null)
+                      navigate('/profile?tab=orders')
+                    }}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg font-heading font-medium transition-colors"
+                  >
+                    View Orders
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowPaymentModal(false)
+                      setPaymentModalData(null)
+                    }}
+                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg font-heading font-medium transition-colors"
+                  >
+                    Continue Shopping
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

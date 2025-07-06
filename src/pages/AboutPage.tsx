@@ -127,11 +127,10 @@ export default function AboutPage() {
                 <Truck className="h-8 w-8 text-emerald-600" />
               </div>
               <h3 className="font-heading text-xl font-semibold text-navy-900 mb-3">
-                Free Shipping
+                Secure Shipping
               </h3>
               <p className="font-body text-gray-600">
-                Free shipping on all orders. Get your new clothes delivered right to your door 
-                without any extra cost.
+                we use the most secure and reliable shipping partners to deliver your order to you.
               </p>
             </div>
 
@@ -158,67 +157,6 @@ export default function AboutPage() {
               <p className="font-body text-gray-600">
                 Our team of style experts is here to help you find the perfect pieces 
                 for your personal style and fit.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-3xl font-bold text-navy-900 mb-4">
-              Meet the Team
-            </h2>
-            <p className="font-body text-gray-600 text-lg">
-              The passionate individuals behind SKATIOUS.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-              <img
-                src="https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg"
-                alt="Team member"
-                className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-              />
-              <h3 className="font-heading text-lg font-semibold text-navy-900 mb-1">
-                Alex Rodriguez
-              </h3>
-              <p className="font-body text-emerald-600 mb-2">Founder & CEO</p>
-              <p className="font-body text-gray-600 text-sm">
-                Fashion entrepreneur with 15 years of industry experience and a passion for sustainable design.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-              <img
-                src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
-                alt="Team member"
-                className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-              />
-              <h3 className="font-heading text-lg font-semibold text-navy-900 mb-1">
-                Sarah Chen
-              </h3>
-              <p className="font-body text-emerald-600 mb-2">Head of Design</p>
-              <p className="font-body text-gray-600 text-sm">
-                Award-winning designer who brings creativity and innovation to every collection.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-              <img
-                src="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg"
-                alt="Team member"
-                className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-              />
-              <h3 className="font-heading text-lg font-semibold text-navy-900 mb-1">
-                Mike Thompson
-              </h3>
-              <p className="font-body text-emerald-600 mb-2">Production Manager</p>
-              <p className="font-body text-gray-600 text-sm">
-                30+ years of textile expertise ensuring every piece is crafted to perfection.
               </p>
             </div>
           </div>

@@ -61,7 +61,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         
         <div className="flex items-center justify-between mb-4">
           <div className="text-2xl font-bold text-navy-800">
-            ${product.price.toFixed(2)}
+            ₹{product.price.toFixed(2)}
           </div>
           
           {product.sizes.length > 0 && (

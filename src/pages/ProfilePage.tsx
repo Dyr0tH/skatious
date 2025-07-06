@@ -455,11 +455,11 @@ export default function ProfilePage() {
                       </span>
                       <div className="text-right">
                         <div className="font-heading text-lg font-semibold text-gray-900">
-                          ${order.total_amount.toFixed(2)}
+                          ₹{order.total_amount.toFixed(2)}
                         </div>
                         {order.discount_amount > 0 && (
                           <div className="text-sm text-green-600 font-body">
-                            Saved ${order.discount_amount.toFixed(2)}
+                            Saved ₹{order.discount_amount.toFixed(2)}
                             {order.discount_code && ` (${order.discount_code})`}
                           </div>
                         )}
@@ -475,7 +475,7 @@ export default function ProfilePage() {
                           <span className="font-body text-gray-600">
                             {item.product_name} ({item.size}) × {item.quantity}
                           </span>
-                          <span className="font-semibold">${item.item_total.toFixed(2)}</span>
+                          <span className="font-semibold">₹{item.item_total.toFixed(2)}</span>
                         </div>
                       ))}
                     </div>

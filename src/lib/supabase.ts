@@ -247,6 +247,9 @@ export type Database = {
           shipping_state: string
           shipping_city: string
           shipping_pin_code: string
+          payment_id: string | null
+          payment_method: string | null
+          razorpay_order_id: string | null
           created_at: string
           updated_at: string
         }
@@ -266,6 +269,9 @@ export type Database = {
           shipping_state: string
           shipping_city: string
           shipping_pin_code: string
+          payment_id?: string | null
+          payment_method?: string | null
+          razorpay_order_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -285,6 +291,9 @@ export type Database = {
           shipping_state?: string
           shipping_city?: string
           shipping_pin_code?: string
+          payment_id?: string | null
+          payment_method?: string | null
+          razorpay_order_id?: string | null
           created_at?: string
           updated_at?: string
         }

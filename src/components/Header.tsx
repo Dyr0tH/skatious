@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { supabase } from '../lib/supabase'
 import DiceRollModal from './DiceRollModal'
-
+import logo from '../../assets/logo/LOGO.jpg'
 export default function Header() {
   const { user, signOut, isAdmin } = useAuth()
   const { getCartCount, applyDiscount } = useCart()
@@ -53,8 +53,9 @@ export default function Header() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+                {/* <span className="text-white font-bold text-lg">S</span> */}
+                <img src={logo} alt="SKATIOUS" className="w-8 h-8" />
               </div>
               <span className="font-display text-xl font-bold text-navy-900">SKATIOUS</span>
             </Link>
