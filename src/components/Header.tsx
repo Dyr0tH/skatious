@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { supabase } from '../lib/supabase'
 import DiceRollModal from './DiceRollModal'
-import logo from '../../assets/logo/LOGO.jpg'
+import logo from '../../assets/logo/LOGO.png'
 export default function Header() {
   const { user, signOut, isAdmin } = useAuth()
   const { getCartCount, applyDiscount } = useCart()
