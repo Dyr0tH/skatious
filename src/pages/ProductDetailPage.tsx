@@ -28,9 +28,7 @@ interface Review {
   review_text: string | null
   created_at: string
   updated_at: string
-  profiles?: {
-    full_name: string
-  }
+  full_name?: string
 }
 
 export default function ProductDetailPage() {
@@ -115,28 +113,55 @@ export default function ProductDetailPage() {
   const loadReviews = async () => {
     try {
       setReviewsLoading(true)
-      const { data, error } = await supabase
+      
+      // First, get all reviews for this product
+      const { data: reviewsData, error: reviewsError } = await supabase
         .from('product_reviews')
-        .select(`
-          id,
-          user_id,
-          rating,
-          review_text,
-          created_at,
-          updated_at,
-          profiles!product_reviews_user_id_fkey (
-            full_name
-          )
-        `)
+        .select('id, user_id, rating, review_text, created_at, updated_at')
         .eq('product_id', productId)
         .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('Error loading reviews:', error)
+      if (reviewsError) {
+        console.error('Error loading reviews:', reviewsError)
         return
       }
 
-      setReviews(data || [])
+      if (!reviewsData || reviewsData.length === 0) {
+        setReviews([])
+        return
+      }
+
+      // Get unique user IDs from reviews
+      const userIds = [...new Set(reviewsData.map(review => review.user_id))]
+
+      // Fetch user profiles for these user IDs
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds)
+
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError)
+        // Continue without profile data
+        setReviews(reviewsData)
+        return
+      }
+
+      // Create a map of user_id to full_name
+      const profileMap = new Map()
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          profileMap.set(profile.id, profile.full_name)
+        })
+      }
+
+      // Combine reviews with profile data
+      const reviewsWithProfiles = reviewsData.map(review => ({
+        ...review,
+        full_name: profileMap.get(review.user_id) || 'Anonymous User'
+      }))
+
+      setReviews(reviewsWithProfiles)
     } catch (err) {
       console.error('Error loading reviews:', err)
     } finally {
@@ -660,7 +685,7 @@ export default function ProductDetailPage() {
                       <div className="flex items-center space-x-2">
                         <User className="h-4 w-4 text-gray-400" />
                         <p className="text-sm text-gray-600 font-body">
-                          {review.profiles?.full_name || 'Anonymous User'}
+                          {review.full_name || 'Anonymous User'}
                         </p>
                       </div>
                     </div>
