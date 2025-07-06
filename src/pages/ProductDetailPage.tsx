@@ -670,9 +670,6 @@ export default function ProductDetailPage() {
                         </div>
                         <span className="text-sm text-gray-500 font-body">
                           {formatDate(review.created_at)}
-                          {review.updated_at !== review.created_at && (
-                            <span className="ml-1">(edited)</span>
-                          )}
                         </span>
                       </div>
                       
