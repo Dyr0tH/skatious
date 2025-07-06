@@ -27,17 +27,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        checkAdminStatus(session.user.id)
+    // Get initial session with error handling for invalid refresh tokens
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          // If there's an error getting the session (likely due to invalid refresh token),
+          // clear the auth state and sign out to remove stale tokens
+          console.warn('Session error, clearing auth state:', error.message)
+          await supabase.auth.signOut()
+          setUser(null)
+          setIsAdmin(false)
+        } else {
+          setUser(session?.user ?? null)
+          if (session?.user) {
+            checkAdminStatus(session.user.id)
+          }
+        }
+      } catch (err) {
+        console.error('Auth initialization error:', err)
+        // Clear auth state on any error
+        await supabase.auth.signOut()
+        setUser(null)
+        setIsAdmin(false)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    }
+
+    initializeAuth()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully')
+      } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out')
+      }
+
       setUser(session?.user ?? null)
       if (session?.user) {
         checkAdminStatus(session.user.id)
@@ -51,13 +79,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const checkAdminStatus = async (userId: string) => {
-    const { data } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle()
-    
-    setIsAdmin(!!data)
+    try {
+      const { data } = await supabase
+        .from('admins')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle()
+      
+      setIsAdmin(!!data)
+    } catch (error) {
+      console.error('Error checking admin status:', error)
+      setIsAdmin(false)
+    }
   }
 
   const signIn = async (email: string, password: string) => {
