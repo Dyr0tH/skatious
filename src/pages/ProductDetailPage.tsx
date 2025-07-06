@@ -682,7 +682,7 @@ export default function ProductDetailPage() {
                       <div className="flex items-center space-x-2">
                         <User className="h-4 w-4 text-gray-400" />
                         <p className="text-sm text-gray-600 font-body">
-                          {review.full_name || 'Anonymous User'}
+                          {profiles.full_name || 'Anonymous User'}
                         </p>
                       </div>
                     </div>
