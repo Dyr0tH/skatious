@@ -25,6 +25,8 @@ interface Order {
   created_at: string
   order_items: {
     product_name: string
+    product_description: string | null
+    product_image_url: string | null
     size: string
     quantity: number
     item_total: number
@@ -146,7 +148,7 @@ export default function ProfilePage() {
       // Fetch order items for all orders
       const { data: orderItemsData, error: itemsError } = await supabase
         .from('order_items')
-        .select('*')
+        .select('order_id, product_name, product_description, product_image_url, size, quantity, item_total')
         .in('order_id', orderIds)
 
       if (itemsError) {
@@ -471,11 +473,30 @@ export default function ProfilePage() {
                     <h4 className="font-heading font-medium text-gray-900 mb-3">Order Items</h4>
                     <div className="space-y-2">
                       {order.order_items.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center text-sm">
-                          <span className="font-body text-gray-600">
-                            {item.product_name} ({item.size}) × {item.quantity}
-                          </span>
-                          <span className="font-semibold">₹{item.item_total.toFixed(2)}</span>
+                        <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                          {item.product_image_url && (
+                            <img
+                              src={item.product_image_url}
+                              alt={item.product_name}
+                              className="w-12 h-12 object-cover rounded-md"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <div className="font-body font-medium text-gray-900">
+                              {item.product_name}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              Size: {item.size} • Quantity: {item.quantity}
+                            </div>
+                            {item.product_description && (
+                              <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                {item.product_description}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <span className="font-semibold text-gray-900">₹{item.item_total.toFixed(2)}</span>
+                          </div>
                         </div>
                       ))}
                     </div>

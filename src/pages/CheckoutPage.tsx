@@ -264,6 +264,8 @@ export default function CheckoutPage() {
         product_id: item.product_id,
         product_name: item.product?.name || 'Unknown Product',
         product_price: item.product?.price || 0,
+        product_description: item.product?.description || '',
+        product_image_url: item.product?.product_images?.[0]?.image_url || '',
         size: item.size,
         quantity: item.quantity,
         item_total: (item.product?.price || 0) * item.quantity
