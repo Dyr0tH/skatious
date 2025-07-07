@@ -508,7 +508,7 @@ export default function AdminPage() {
     } else if (type === 'discount') {
       setDiscountForm({
         code: item.code,
-      alert('Product and all associated data (cart items, reviews, order items) deleted successfully!')
+        discount_percentage: item.discount_percentage,
         active: item.active
       })
       setShowDiscountForm(true)
