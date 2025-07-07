@@ -220,11 +220,6 @@ export default function CartPage() {
                   </div>
                 )}
                 
-                <div className="flex justify-between font-body text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="text-gray-900">Free</span>
-                </div>
-                
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between font-heading text-lg font-semibold">
                     <span className="text-gray-900">Total</span>

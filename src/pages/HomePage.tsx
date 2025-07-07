@@ -85,26 +85,14 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative text-white overflow-hidden">
-        {/* Video Background */}
-        <div className="absolute inset-0">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          >
-            <source src="/assets/vids/dunes.webm" type="video/webm" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-        
+      <section className="relative min-h-[500px] flex items-center justify-center text-white overflow-hidden">
+        {/* Animated Glassmorphic Gradient Background */}
+        <div className="hero-animated-gradient"></div>
+        <div className="absolute inset-0 z-1 backdrop-blur-xl bg-white/5"></div>
         {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/40"></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-          <div className="text-center">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/60 z-[2]"></div>
+        <div className="relative z-[3] w-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 text-center">
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in">
               Elevate Your
               <span className="text-emerald-400 block">Style Experience</span>

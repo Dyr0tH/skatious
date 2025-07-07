@@ -107,7 +107,7 @@ export default function CheckoutPage() {
       const tempOrderNumber = `TEMP_${Date.now()}_${Math.random().toString(36).substring(2)}`
       
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_ttH1OvFMvqEQfK',
+        key: import.meta.env.RAZORPAY_KEY_ID || 'rzp_live_ntMssPF5wTWOLf',
         amount: Math.round(finalPrice * 100), // Razorpay expects amount in paise
         currency: 'INR',
         name: 'SKATIOUS',
@@ -225,8 +225,6 @@ export default function CheckoutPage() {
       setPaymentProcessing(false)
     }
   }
-
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -541,11 +539,11 @@ export default function CheckoutPage() {
                     onClick={() => {
                       setShowPaymentModal(false)
                       setPaymentModalData(null)
-                      navigate('/profile?tab=orders')
+                      navigate('/products')
                     }}
                     className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg font-heading font-medium transition-colors"
                   >
-                    View Orders
+                    Continue Shopping
                   </button>
                 ) : (
                   <button
