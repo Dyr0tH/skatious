@@ -365,61 +365,6 @@ export default function AdminPage() {
     try {
       // First check if product has any associated orders
       const { data: orderItems, error: checkError } = await supabase
-        .from('order_items')
-        .select('id')
-        .eq('product_id', productId)
-        .limit(1)
-
-      if (checkError) {
-        console.error('Error checking product orders:', checkError)
-        alert('Error checking product orders. Please try again.')
-        return
-      }
-
-      if (orderItems && orderItems.length > 0) {
-        alert('Cannot delete this product because it has associated orders. Consider marking it as inactive instead.')
-        return
-      }
-
-      // If no orders, proceed with deletion
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId)
-
-      if (error) {
-        if (error.code === '23503') {
-          alert('Cannot delete this product because it has associated data (orders, reviews, etc.). Consider marking it as inactive instead.')
-        } else {
-          console.error('Error deleting product:', error)
-          alert('Error deleting product: ' + error.message)
-        }
-        return
-      }
-
-      await loadProducts()
-      alert('Product deleted successfully!')
-    } catch (error) {
-      console.error('Error deleting product:', error)
-      alert('Error deleting product. Please try again.')
-    }
-  }
-
-  const handleDelete = async (table: string, id: string) => {
-    if (confirm('Are you sure you want to delete this item?')) {
-      await supabase.from(table).delete().eq('id', id)
-      loadData()
-    }
-  }
-
-  const toggleSpecialDiscount = async () => {
-    const newState = !specialDiscountActive
-    
-    await supabase
-      .from('special_discount_settings')
-      .upsert({ id: SPECIAL_DISCOUNT_SETTINGS_ID, active: newState })
-    
-    setSpecialDiscountActive(newState)
   }
 
   const handleImagesUploaded = (imageUrls: string[]) => {
@@ -427,12 +372,8 @@ export default function AdminPage() {
     setProductForm(prev => ({ ...prev, image_urls: imageUrls }))
   }
 
-  const handlePendingImagesChange = (pendingImages: File[]) => {
-    setPendingImages(pendingImages)
-  }
-
-  const handleUploadPendingImages = (uploadFn: () => Promise<string[]>) => {
-    setUploadPendingImagesFn(() => uploadFn)
+        console.error('Error deleting product:', error)
+        alert('Error deleting product. Please try again.')
   }
 
   const startEdit = (item: any, type: string) => {
@@ -459,7 +400,7 @@ export default function AdminPage() {
     } else if (type === 'discount') {
       setDiscountForm({
         code: item.code,
-        discount_percentage: item.discount_percentage,
+      alert('Product and all associated data (cart items, reviews, order items) deleted successfully!')
         active: item.active
       })
       setShowDiscountForm(true)
