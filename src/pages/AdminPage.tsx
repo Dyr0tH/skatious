@@ -365,6 +365,40 @@ export default function AdminPage() {
     try {
       // First check if product has any associated orders
       const { data: orderItems, error: checkError } = await supabase
+        .from('order_items')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1)
+
+      if (checkError) {
+        console.error('Error checking order items:', checkError)
+        alert('Error checking product dependencies. Please try again.')
+        return
+      }
+
+      if (orderItems && orderItems.length > 0) {
+        alert('Cannot delete this product as it has associated orders.')
+        return
+      }
+
+      // Delete the product (this will cascade delete product_images, cart_items, and reviews)
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId)
+
+      if (error) {
+        console.error('Error deleting product:', error)
+        alert('Error deleting product. Please try again.')
+        return
+      }
+
+      loadProducts()
+      alert('Product and all associated data (cart items, reviews, product images) deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      alert('Error deleting product. Please try again.')
+    }
   }
 
   const handleImagesUploaded = (imageUrls: string[]) => {
@@ -372,8 +406,82 @@ export default function AdminPage() {
     setProductForm(prev => ({ ...prev, image_urls: imageUrls }))
   }
 
-        console.error('Error deleting product:', error)
-        alert('Error deleting product. Please try again.')
+  const handlePendingImagesChange = (images: File[]) => {
+    setPendingImages(images)
+  }
+
+  const handleUploadPendingImages = (uploadFn: () => Promise<string[]>) => {
+    setUploadPendingImagesFn(() => uploadFn)
+  }
+
+  const handleDelete = async (table: string, id: string) => {
+    if (!confirm('Are you sure you want to delete this item? This action cannot be undone.')) return
+
+    try {
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error(`Error deleting from ${table}:`, error)
+        alert('Error deleting item. Please try again.')
+        return
+      }
+
+      // Reload the appropriate data
+      if (table === 'categories') {
+        loadCategories()
+      } else if (table === 'discount_codes') {
+        loadDiscountCodes()
+      }
+    } catch (error) {
+      console.error(`Error deleting from ${table}:`, error)
+      alert('Error deleting item. Please try again.')
+    }
+  }
+
+  const toggleSpecialDiscount = async () => {
+    try {
+      // First check if the settings record exists
+      const { data: existing } = await supabase
+        .from('special_discount_settings')
+        .select('id')
+        .eq('id', SPECIAL_DISCOUNT_SETTINGS_ID)
+        .maybeSingle()
+
+      const newActiveState = !specialDiscountActive
+
+      if (existing) {
+        // Update existing record
+        const { error } = await supabase
+          .from('special_discount_settings')
+          .update({ active: newActiveState })
+          .eq('id', SPECIAL_DISCOUNT_SETTINGS_ID)
+
+        if (error) {
+          console.error('Error updating special discount settings:', error)
+          return
+        }
+      } else {
+        // Create new record
+        const { error } = await supabase
+          .from('special_discount_settings')
+          .insert({
+            id: SPECIAL_DISCOUNT_SETTINGS_ID,
+            active: newActiveState
+          })
+
+        if (error) {
+          console.error('Error creating special discount settings:', error)
+          return
+        }
+      }
+
+      setSpecialDiscountActive(newActiveState)
+    } catch (error) {
+      console.error('Error toggling special discount:', error)
+    }
   }
 
   const startEdit = (item: any, type: string) => {
