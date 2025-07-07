@@ -359,6 +359,52 @@ export default function AdminPage() {
     loadDiscountCodes()
   }
 
+  const deleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return
+
+    try {
+      // First check if product has any associated orders
+      const { data: orderItems, error: checkError } = await supabase
+        .from('order_items')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1)
+
+      if (checkError) {
+        console.error('Error checking product orders:', checkError)
+        alert('Error checking product orders. Please try again.')
+        return
+      }
+
+      if (orderItems && orderItems.length > 0) {
+        alert('Cannot delete this product because it has associated orders. Consider marking it as inactive instead.')
+        return
+      }
+
+      // If no orders, proceed with deletion
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId)
+
+      if (error) {
+        if (error.code === '23503') {
+          alert('Cannot delete this product because it has associated data (orders, reviews, etc.). Consider marking it as inactive instead.')
+        } else {
+          console.error('Error deleting product:', error)
+          alert('Error deleting product: ' + error.message)
+        }
+        return
+      }
+
+      await loadProducts()
+      alert('Product deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      alert('Error deleting product. Please try again.')
+    }
+  }
+
   const handleDelete = async (table: string, id: string) => {
     if (confirm('Are you sure you want to delete this item?')) {
       await supabase.from(table).delete().eq('id', id)
@@ -657,7 +703,7 @@ export default function AdminPage() {
                               Edit
                             </button>
                             <button
-                              onClick={() => handleDelete('products', product.id)}
+                              onClick={() => deleteProduct(product.id)}
                               className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-150"
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
