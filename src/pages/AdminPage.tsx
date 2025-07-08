@@ -18,6 +18,7 @@ interface Product {
   price: number
   category_id: string
   sizes: string[]
+  in_stock: boolean
   categories?: { name: string }
 }
 
