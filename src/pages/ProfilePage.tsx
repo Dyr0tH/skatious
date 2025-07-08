@@ -13,6 +13,7 @@ interface Profile {
   state: string
   city: string
   pin_code: string
+  full_address: string
 }
 
 interface Order {
@@ -60,7 +61,8 @@ export default function ProfilePage() {
     country: '',
     state: '',
     city: '',
-    pin_code: ''
+    pin_code: '',
+    full_address: ''
   })
   const [orders, setOrders] = useState<Order[]>([])
   const [isEditing, setIsEditing] = useState(false)
@@ -109,7 +111,8 @@ export default function ProfilePage() {
           country: data.country || '',
           state: data.state || '',
           city: data.city || '',
-          pin_code: data.pin_code || ''
+          pin_code: data.pin_code || '',
+          full_address: data.full_address || ''
         })
       } else {
         // No profile exists, use user email
@@ -184,7 +187,8 @@ export default function ProfilePage() {
           country: profile.country,
           state: profile.state,
           city: profile.city,
-          pin_code: profile.pin_code
+          pin_code: profile.pin_code,
+          full_address: profile.full_address
         })
 
       if (error) {
@@ -203,7 +207,7 @@ export default function ProfilePage() {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProfile(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -409,6 +413,20 @@ export default function ProfilePage() {
                   onChange={handleChange}
                   disabled={!isEditing}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body disabled:bg-gray-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 font-heading mb-1">
+                  Full Address
+                </label>
+                <textarea
+                  name="full_address"
+                  value={profile.full_address}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body disabled:bg-gray-50"
+                  rows={3}
                 />
               </div>
             </div>

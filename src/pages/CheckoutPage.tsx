@@ -20,6 +20,20 @@ interface ShippingInfo {
   state: string
   city: string
   pin_code: string
+  full_address: string
+}
+
+interface ProductImage {
+  image_url: string
+  alt_text?: string | null
+  order_index?: number
+}
+
+interface Product {
+  name: string
+  price: number
+  product_images: ProductImage[]
+  description?: string
 }
 
 export default function CheckoutPage() {
@@ -36,6 +50,7 @@ export default function CheckoutPage() {
     state: '',
     city: '',
     pin_code: '',
+    full_address: ''
   })
   
   const [loading, setLoading] = useState(false)
@@ -84,6 +99,7 @@ export default function CheckoutPage() {
             state: data.state || '',
             city: data.city || '',
             pin_code: data.pin_code || '',
+            full_address: data.full_address || ''
           })
         } else {
           setShippingInfo(prev => ({
@@ -201,7 +217,8 @@ export default function CheckoutPage() {
           country: shippingInfo.country,
           state: shippingInfo.state,
           city: shippingInfo.city,
-          pin_code: shippingInfo.pin_code
+          pin_code: shippingInfo.pin_code,
+          full_address: shippingInfo.full_address
         })
 
       // Clear cart
@@ -256,6 +273,7 @@ export default function CheckoutPage() {
         shipping_state: shippingInfo.state,
         shipping_city: shippingInfo.city,
         shipping_pin_code: shippingInfo.pin_code,
+        shipping_full_address: shippingInfo.full_address,
         status: 'pending'
       }
 
@@ -264,7 +282,7 @@ export default function CheckoutPage() {
         product_id: item.product_id,
         product_name: item.product?.name || 'Unknown Product',
         product_price: item.product?.price || 0,
-        product_description: item.product?.description || '',
+        product_description: (item.product as Product)?.description || '',
         product_image_url: item.product?.product_images?.[0]?.image_url || '',
         size: item.size,
         quantity: item.quantity,
@@ -286,7 +304,7 @@ export default function CheckoutPage() {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setShippingInfo(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -421,6 +439,20 @@ export default function CheckoutPage() {
                     value={shippingInfo.pin_code}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 font-heading mb-1">
+                    Full Address
+                  </label>
+                  <textarea
+                    name="full_address"
+                    required
+                    value={shippingInfo.full_address}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                    rows={3}
                   />
                 </div>
               </form>

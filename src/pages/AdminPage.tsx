@@ -43,6 +43,7 @@ interface Order {
   shipping_state: string
   shipping_city: string
   shipping_pin_code: string
+  shipping_full_address?: string
   created_at: string
   user_id: string
   customer_name?: string
@@ -1063,9 +1064,15 @@ export default function AdminPage() {
                   <div>
                     <h4 className="font-heading text-lg font-semibold text-gray-900 mb-3">Shipping Address</h4>
                     <div className="space-y-1 text-sm">
-                      <div>{selectedOrder.shipping_city}, {selectedOrder.shipping_state}</div>
-                      <div>{selectedOrder.shipping_country}</div>
-                      <div>PIN: {selectedOrder.shipping_pin_code}</div>
+                      {selectedOrder.shipping_full_address ? (
+                        <div>{selectedOrder.shipping_full_address}</div>
+                      ) : (
+                        <>
+                          <div>{selectedOrder.shipping_city}, {selectedOrder.shipping_state}</div>
+                          <div>{selectedOrder.shipping_country}</div>
+                          <div>PIN: {selectedOrder.shipping_pin_code}</div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
