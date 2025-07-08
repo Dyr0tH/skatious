@@ -99,6 +99,9 @@ export default function AdminPage() {
     active: true
   })
 
+  const [showForceDeleteModal, setShowForceDeleteModal] = useState(false)
+  const [productToForceDelete, setProductToForceDelete] = useState<string | null>(null)
+
   useEffect(() => {
     if (user && isAdmin) {
       loadData()
@@ -359,26 +362,29 @@ export default function AdminPage() {
     loadDiscountCodes()
   }
 
-  const deleteProduct = async (productId: string) => {
+  const deleteProduct = async (productId: string, force = false) => {
     if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return
 
     try {
-      // First check if product has any associated orders
-      const { data: orderItems, error: checkError } = await supabase
-        .from('order_items')
-        .select('id')
-        .eq('product_id', productId)
-        .limit(1)
+      if (!force) {
+        // First check if product has any associated orders
+        const { data: orderItems, error: checkError } = await supabase
+          .from('order_items')
+          .select('id')
+          .eq('product_id', productId)
+          .limit(1)
 
-      if (checkError) {
-        console.error('Error checking order items:', checkError)
-        alert('Error checking product dependencies. Please try again.')
-        return
-      }
+        if (checkError) {
+          console.error('Error checking order items:', checkError)
+          alert('Error checking product dependencies. Please try again.')
+          return
+        }
 
-      if (orderItems && orderItems.length > 0) {
-        alert('Cannot delete this product as it has associated orders.')
-        return
+        if (orderItems && orderItems.length > 0) {
+          setProductToForceDelete(productId)
+          setShowForceDeleteModal(true)
+          return
+        }
       }
 
       // Delete the product (this will cascade delete product_images, cart_items, and reviews)
@@ -395,6 +401,8 @@ export default function AdminPage() {
 
       loadProducts()
       alert('Product and all associated data (cart items, reviews, product images) deleted successfully!')
+      setShowForceDeleteModal(false)
+      setProductToForceDelete(null)
     } catch (error) {
       console.error('Error deleting product:', error)
       alert('Error deleting product. Please try again.')
@@ -1382,6 +1390,58 @@ export default function AdminPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {showForceDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6 relative">
+              <button
+                onClick={() => {
+                  setShowForceDeleteModal(false)
+                  setProductToForceDelete(null)
+                }}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <div className="text-center">
+                <div className="mx-auto mb-4">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="font-heading text-xl font-semibold mb-2 text-red-800">
+                  Cannot delete this product as it has associated orders.
+                </h3>
+                <p className="font-body text-gray-600 mb-4">
+                  Are you sure you want to delete this product? This will remove the product from the store, but existing orders will keep their order history.
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      if (productToForceDelete) deleteProduct(productToForceDelete, true)
+                    }}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-heading font-medium transition-colors"
+                  >
+                    Go ahead and delete
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowForceDeleteModal(false)
+                      setProductToForceDelete(null)
+                    }}
+                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg font-heading font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
