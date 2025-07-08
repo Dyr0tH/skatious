@@ -249,6 +249,16 @@ export default function CheckoutPage() {
     setPaymentProcessing(true)
 
     try {
+      // Check session before proceeding
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!user || !sessionData.session) {
+        alert('Your session has expired. Please log in again to place an order.');
+        navigate('/auth');
+        setLoading(false);
+        setPaymentProcessing(false);
+        return;
+      }
+
       if (!user) {
         alert('Please sign in to place an order')
         navigate('/auth')

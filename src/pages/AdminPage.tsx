@@ -1064,15 +1064,12 @@ export default function AdminPage() {
                   <div>
                     <h4 className="font-heading text-lg font-semibold text-gray-900 mb-3">Shipping Address</h4>
                     <div className="space-y-1 text-sm">
-                      {selectedOrder.shipping_full_address ? (
-                        <div>{selectedOrder.shipping_full_address}</div>
-                      ) : (
-                        <>
-                          <div>{selectedOrder.shipping_city}, {selectedOrder.shipping_state}</div>
-                          <div>{selectedOrder.shipping_country}</div>
-                          <div>PIN: {selectedOrder.shipping_pin_code}</div>
-                        </>
+                      {selectedOrder.shipping_full_address && (
+                        <div className="flex"><span className="font-semibold w-32">Full Address:</span> <span>{selectedOrder.shipping_full_address}</span></div>
                       )}
+                      <div className="flex"><span className="font-semibold w-32">City/State:</span> <span>{selectedOrder.shipping_city}, {selectedOrder.shipping_state}</span></div>
+                      <div className="flex"><span className="font-semibold w-32">Country:</span> <span>{selectedOrder.shipping_country}</span></div>
+                      <div className="flex"><span className="font-semibold w-32">PIN:</span> <span>{selectedOrder.shipping_pin_code}</span></div>
                     </div>
                   </div>
                 </div>
