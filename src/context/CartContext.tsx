@@ -94,6 +94,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [discountCode, setDiscountCode] = useState<string | null>(null)
   const [discountPercentage, setDiscountPercentage] = useState<number>(0)
 
+  // Fetch dice roll discount for logged-in user only
+  useEffect(() => {
+    const fetchUserDiceDiscount = async () => {
+      if (user) {
+        // Fetch latest dice roll for today
+        const today = new Date().toISOString().split('T')[0]
+        const { data, error } = await supabase
+          .from('user_dice_rolls')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('created_at', `${today}T00:00:00.000Z`)
+          .lt('created_at', `${today}T23:59:59.999Z`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+        if (data && data.length > 0) {
+          const roll = data[0]
+          // Generate the discount code as in DiceRollModal
+          const userPrefix = user.id.substring(0, 4).toUpperCase()
+          const code = `DICE${userPrefix}${roll.roll_result}${today.replace(/-/g, '')}`
+          setDiscountCode(code)
+          setDiscountPercentage(roll.discount_percentage)
+        } else {
+          setDiscountCode(null)
+          setDiscountPercentage(0)
+        }
+      } else {
+        // For guests, do not apply any dice discount
+        setDiscountCode(null)
+        setDiscountPercentage(0)
+      }
+    }
+    fetchUserDiceDiscount()
+  }, [user])
+
   useEffect(() => {
     // Generate or get session ID for anonymous users
     let storedSessionId = localStorage.getItem('cart_session_id')
@@ -255,18 +290,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return items.reduce((count, item) => count + item.quantity, 0)
   }
 
+  // Only allow manual promo code for guests, not dice discount
   const applyDiscount = (code: string, percentage: number) => {
     setDiscountCode(code)
     setDiscountPercentage(percentage)
-    localStorage.setItem('discount_code', code)
-    localStorage.setItem('discount_percentage', percentage.toString())
   }
 
   const removeDiscount = () => {
     setDiscountCode(null)
     setDiscountPercentage(0)
-    localStorage.removeItem('discount_code')
-    localStorage.removeItem('discount_percentage')
   }
 
   const getFinalTotal = () => {
@@ -274,17 +306,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const discountAmount = (subtotal * discountPercentage) / 100
     return subtotal - discountAmount
   }
-
-  // Load discount from localStorage on mount
-  useEffect(() => {
-    const savedCode = localStorage.getItem('discount_code')
-    const savedPercentage = localStorage.getItem('discount_percentage')
-    
-    if (savedCode && savedPercentage) {
-      setDiscountCode(savedCode)
-      setDiscountPercentage(parseInt(savedPercentage))
-    }
-  }, [])
 
   const value = {
     items,
