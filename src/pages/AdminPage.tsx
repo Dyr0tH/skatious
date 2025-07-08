@@ -89,7 +89,8 @@ export default function AdminPage() {
     price: 0,
     category_id: '',
     sizes: [''],
-    image_urls: [] as string[]
+    image_urls: [] as string[],
+    in_stock: true
   })
   const [pendingImages, setPendingImages] = useState<File[]>([])
   const [uploadPendingImagesFn, setUploadPendingImagesFn] = useState<(() => Promise<string[]>) | null>(null)
@@ -139,11 +140,7 @@ export default function AdminPage() {
   const loadProducts = async () => {
     const { data } = await supabase
       .from('products')
-      .select(`
-        *,
-        categories(name),
-        product_images(image_url, order_index)
-      `)
+      .select('*, categories(name), product_images(image_url, order_index, alt_text)')
     setProducts(data || [])
   }
 
@@ -271,7 +268,8 @@ export default function AdminPage() {
       description: productForm.description,
       price: productForm.price,
       category_id: productForm.category_id,
-      sizes: productForm.sizes.filter(size => size.trim() !== '')
+      sizes: productForm.sizes.filter(size => size.trim() !== ''),
+      in_stock: productForm.in_stock
     }
 
     let productId = editingItem?.id
@@ -330,7 +328,8 @@ export default function AdminPage() {
       price: 0,
       category_id: '',
       sizes: [''],
-      image_urls: []
+      image_urls: [],
+      in_stock: true
     })
     setPendingImages([])
     setUploadPendingImagesFn(null)
@@ -508,7 +507,8 @@ export default function AdminPage() {
         price: item.price,
         category_id: item.category_id,
         sizes: item.sizes.length ? item.sizes : [''],
-        image_urls: existingImages
+        image_urls: existingImages,
+        in_stock: item.in_stock
       })
       setPendingImages([])
       setUploadPendingImagesFn(null)
@@ -691,14 +691,17 @@ export default function AdminPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-heading">
                         Product Details
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Category
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-heading">
                         Price
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-heading">
+                        Stock Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-heading">
+                        Category
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Available Sizes
@@ -728,15 +731,20 @@ export default function AdminPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                            {product.categories?.name || 'Uncategorized'}
-                          </span>
+                        <td className="px-6 py-4 whitespace-nowrap font-body text-sm text-gray-900">
+                          ₹{product.price.toFixed(2)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-semibold text-gray-900 font-body">
-                            ₹{product.price.toFixed(2)}
-                          </div>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            product.in_stock 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.in_stock ? 'In Stock' : 'Out of Stock'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap font-body text-sm text-gray-500">
+                          {product.categories?.name || 'No Category'}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-wrap gap-1">
@@ -1266,6 +1274,23 @@ export default function AdminPage() {
                 </div>
 
                 <div>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={productForm.in_stock}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, in_stock: e.target.checked }))}
+                      className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <span className="font-heading text-sm font-medium text-gray-700">
+                      In Stock
+                    </span>
+                  </label>
+                  <p className="font-body text-xs text-gray-500 mt-1">
+                    Uncheck if product is out of stock
+                  </p>
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 font-heading mb-1">
                     Product Images
                   </label>
@@ -1308,7 +1333,8 @@ export default function AdminPage() {
                         price: 0,
                         category_id: '',
                         sizes: [''],
-                        image_urls: []
+                        image_urls: [],
+                        in_stock: true
                       })
                       setPendingImages([])
                       setUploadPendingImagesFn(null)

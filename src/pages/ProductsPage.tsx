@@ -9,6 +9,7 @@ interface Product {
   description: string
   price: number
   sizes: string[]
+  in_stock: boolean
   image_url: string
   category?: { name: string }
 }
@@ -51,6 +52,7 @@ export default function ProductsPage() {
           description,
           price,
           sizes,
+          in_stock,
           categories (
             name
           ),
@@ -68,6 +70,7 @@ export default function ProductsPage() {
           description: product.description,
           price: product.price,
           sizes: product.sizes,
+          in_stock: product.in_stock,
           image_url: product.product_images[0]?.image_url || 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg',
           category: product.categories
         }))
@@ -83,6 +86,7 @@ export default function ProductsPage() {
           description: 'Soft, comfortable cotton t-shirt with modern fit',
           price: 29.99,
           sizes: ['XS', 'S', 'M', 'L', 'XL'],
+          in_stock: true,
           image_url: 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg',
           category: { name: 'T-Shirts' }
         },
@@ -92,6 +96,7 @@ export default function ProductsPage() {
           description: 'Stylish hoodie perfect for casual wear and street style',
           price: 49.99,
           sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+          in_stock: true,
           image_url: 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg',
           category: { name: 'Hoodies' }
         },
@@ -101,6 +106,7 @@ export default function ProductsPage() {
           description: 'Timeless denim jacket with modern styling',
           price: 79.99,
           sizes: ['XS', 'S', 'M', 'L', 'XL'],
+          in_stock: true,
           image_url: 'https://images.pexels.com/photos/1010973/pexels-photo-1010973.jpeg',
           category: { name: 'Jackets' }
         },
@@ -110,6 +116,7 @@ export default function ProductsPage() {
           description: 'Comfortable joggers perfect for lounging and workouts',
           price: 39.99,
           sizes: ['XS', 'S', 'M', 'L', 'XL'],
+          in_stock: true,
           image_url: 'https://images.pexels.com/photos/2398220/pexels-photo-2398220.jpeg',
           category: { name: 'Pants' }
         }

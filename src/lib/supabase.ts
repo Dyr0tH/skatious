@@ -36,6 +36,7 @@ export type Database = {
           price: number
           category_id: string
           sizes: string[]
+          in_stock: boolean
           created_at: string
         }
         Insert: {
@@ -45,6 +46,7 @@ export type Database = {
           price: number
           category_id: string
           sizes: string[]
+          in_stock?: boolean
           created_at?: string
         }
         Update: {
@@ -54,6 +56,7 @@ export type Database = {
           price?: number
           category_id?: string
           sizes?: string[]
+          in_stock?: boolean
           created_at?: string
         }
       }

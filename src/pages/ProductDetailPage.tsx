@@ -11,6 +11,7 @@ interface Product {
   description: string
   price: number
   sizes: string[]
+  in_stock: boolean
   average_rating: number
   total_reviews: number
   category?: { name: string }
@@ -76,6 +77,7 @@ export default function ProductDetailPage() {
           description,
           price,
           sizes,
+          in_stock,
           average_rating,
           total_reviews,
           categories (
@@ -455,7 +457,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Size Selection */}
-            {product.sizes.length > 0 && (
+            {product.sizes.length > 0 && product.in_stock && (
               <div>
                 <h3 className="font-heading text-lg font-semibold text-gray-900 mb-3">Select Size</h3>
                 <div className="grid grid-cols-3 gap-3">
@@ -478,14 +480,28 @@ export default function ProductDetailPage() {
 
             {/* Add to Cart */}
             <div className="space-y-4">
-              <button
-                onClick={handleAddToCart}
-                disabled={isAdding || !selectedSize}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white py-4 px-6 rounded-lg font-heading font-semibold text-lg transition-colors duration-200 flex items-center justify-center space-x-3"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                <span>{isAdding ? 'Adding to Cart...' : 'Add to Cart'}</span>
-              </button>
+              {product.in_stock ? (
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isAdding || !selectedSize}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white py-4 px-6 rounded-lg font-heading font-semibold text-lg transition-colors duration-200 flex items-center justify-center space-x-3"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  <span>{isAdding ? 'Adding to Cart...' : 'Add to Cart'}</span>
+                </button>
+              ) : (
+                <div className="w-full bg-red-100 text-red-800 py-4 px-6 rounded-lg font-heading font-semibold text-lg text-center border-2 border-red-200">
+                  <div className="flex items-center justify-center space-x-3">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Out of Stock</span>
+                  </div>
+                  <p className="font-body text-sm text-red-600 mt-2">
+                    This product is currently unavailable
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
