@@ -9,6 +9,7 @@ interface Product {
   description: string
   price: number
   sizes: string[]
+  in_stock: boolean
   image_url: string
 }
 
@@ -64,7 +65,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             ₹{product.price.toFixed(2)}
           </div>
           
-          {product.sizes.length > 0 && (
+          {product.sizes.length > 0 && product.in_stock && (
             <select
               value={selectedSize}
               onChange={(e) => setSelectedSize(e.target.value)}
@@ -80,14 +81,25 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        <button
-          onClick={handleAddToCart}
-          disabled={isAdding || !selectedSize}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white py-2 px-4 rounded-lg font-heading font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
-        >
-          <ShoppingCart className="h-4 w-4" />
-          <span>{isAdding ? 'Adding...' : 'Add to Cart'}</span>
-        </button>
+        {product.in_stock ? (
+          <button
+            onClick={handleAddToCart}
+            disabled={isAdding || !selectedSize}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white py-2 px-4 rounded-lg font-heading font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
+          >
+            <ShoppingCart className="h-4 w-4" />
+            <span>{isAdding ? 'Adding...' : 'Add to Cart'}</span>
+          </button>
+        ) : (
+          <div className="w-full bg-red-100 text-red-800 py-2 px-4 rounded-lg font-heading font-medium text-center border border-red-200">
+            <div className="flex items-center justify-center space-x-2">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span>Out of Stock</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

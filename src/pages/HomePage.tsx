@@ -10,6 +10,7 @@ interface Product {
   description: string
   price: number
   sizes: string[]
+  in_stock: boolean
   image_url: string
 }
 
@@ -31,6 +32,7 @@ export default function HomePage() {
           description,
           price,
           sizes,
+          in_stock,
           product_images!inner (
             image_url,
             order_index
@@ -45,6 +47,7 @@ export default function HomePage() {
           description: product.description,
           price: product.price,
           sizes: product.sizes,
+          in_stock: product.in_stock,
           image_url: product.product_images[0]?.image_url || 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg',
         }))
         setFeaturedProducts(formattedProducts)
@@ -59,6 +62,7 @@ export default function HomePage() {
           description: 'Soft, comfortable cotton t-shirt with modern fit',
           price: 29.99,
           sizes: ['XS', 'S', 'M', 'L', 'XL'],
+          in_stock: true,
           image_url: 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg'
         },
         {
@@ -67,6 +71,7 @@ export default function HomePage() {
           description: 'Stylish hoodie perfect for casual wear and street style',
           price: 49.99,
           sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+          in_stock: true,
           image_url: 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg'
         },
         {
@@ -75,6 +80,7 @@ export default function HomePage() {
           description: 'Timeless denim jacket with modern styling',
           price: 79.99,
           sizes: ['XS', 'S', 'M', 'L', 'XL'],
+          in_stock: true,
           image_url: 'https://images.pexels.com/photos/1010973/pexels-photo-1010973.jpeg'
         }
       ])
