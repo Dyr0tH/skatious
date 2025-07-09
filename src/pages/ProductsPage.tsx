@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Filter, Search } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ProductCard from '../components/ProductCard'
+import Footer from '../components/Footer'
 
 interface Product {
   id: string
@@ -71,8 +72,8 @@ export default function ProductsPage() {
           price: product.price,
           sizes: product.sizes,
           in_stock: product.in_stock,
-          image_url: product.product_images[0]?.image_url || 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg',
-          category: product.categories
+          image_url: product.product_images[0]?.image_url || '/assets/logo/logo.jpg',
+          category: product.categories?.[0] || { name: 'Uncategorized' }
         }))
         setProducts(formattedProducts)
       }
@@ -239,6 +240,7 @@ export default function ProductsPage() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   )
 }

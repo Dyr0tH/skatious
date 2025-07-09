@@ -431,7 +431,7 @@ export default function ProductDetailPage() {
             </h1>
 
             {/* Rating Summary */}
-            <div className="flex items-center space-x-4">
+            {/* <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 {renderStars(product.average_rating)}
                 <span className="font-body text-sm text-gray-600">
@@ -441,7 +441,7 @@ export default function ProductDetailPage() {
               <span className="font-body text-sm text-gray-500">
                 ({product.total_reviews} review{product.total_reviews !== 1 ? 's' : ''})
               </span>
-            </div>
+            </div> */}
 
             {/* Price */}
             <div className="text-3xl font-bold text-navy-800">

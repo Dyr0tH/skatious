@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Star, Users, Award } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ProductCard from '../components/ProductCard'
-
+import Footer from '../components/Footer'
 interface Product {
   id: string
   name: string
@@ -109,14 +109,14 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
               <Link
                 to="/products"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-heading font-semibold text-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                className="bg-emerald-500/30 backdrop-blur-xl hover:bg-emerald-600/40 text-white px-8 py-3 rounded-lg font-heading font-semibold text-lg transition-colors duration-200 flex items-center justify-center space-x-2 shadow-lg border-2 border-emerald-300/40"
               >
                 <span>Shop Collection</span>
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <Link
                 to="/about"
-                className="border-2 border-white text-white hover:bg-white hover:text-navy-900 px-8 py-3 rounded-lg font-heading font-semibold text-lg transition-all duration-200"
+                className="border-2 border-white text-white hover:bg-white/20 hover:text-navy-900 px-8 py-3 rounded-lg font-heading font-semibold text-lg transition-all duration-200 backdrop-blur-xl bg-white/10 shadow-lg"
               >
                 Learn More
               </Link>
@@ -234,6 +234,7 @@ export default function HomePage() {
           </form>
         </div>
       </section>
+      <Footer />
     </div>
   )
 }

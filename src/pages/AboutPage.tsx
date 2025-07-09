@@ -1,5 +1,6 @@
 import React from 'react'
 import { Award, Users, Heart, Truck, Shield, Star } from 'lucide-react'
+import Footer from '../components/Footer'
 
 export default function AboutPage() {
   return (
@@ -7,50 +8,16 @@ export default function AboutPage() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-navy-900 via-navy-800 to-emerald-900 text-white py-24">
         <div className="absolute inset-0 bg-black opacity-20"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="font-display text-4xl sm:text-5xl font-bold mb-6">
             About SKATIOUS
           </h1>
           <p className="font-body text-xl text-gray-200 max-w-3xl mx-auto">
-            Born from passion, built for style. We're more than just a clothing company – 
-            we're a community dedicated to pushing the boundaries of fashion and comfort.
+            Skatious is more than just a clothing brand — it’s a statement, a mindset, and a movement stitched into every thread. Built from the ground up with a focus on individuality, street culture, and raw expression, Skatious exists at the intersection of skate, street, and self.<br /><br />
+            Every piece is designed with intention — stripped of the fake, built on authenticity. No corporate nonsense, no mass production gimmicks. Just real designs made for real people who don’t follow trends — they set them.<br /><br />
+            From the first sketch to the final drop, everything has been crafted with precision, passion, and a whole lot of stubborn late nights. Skatious isn't just worn — it’s lived in. Welcome to the brand that doesn’t care what you’re supposed to wear. We care about what you want to wear.<br /><br />
+            <span className="font-bold text-emerald-300">This is Skatious. Built different.</span>
           </p>
-        </div>
-      </section>
-
-      {/* Our Story */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="font-display text-3xl font-bold text-navy-900 mb-6">
-                Our Story
-              </h2>
-              <div className="space-y-4 font-body text-gray-600 text-lg">
-                <p>
-                  Founded in 2020 by a group of passionate fashion enthusiasts, SKATIOUS emerged from a simple belief: 
-                  everyone deserves clothing that matches their personality and lifestyle.
-                </p>
-                <p>
-                  What started as a small design studio in California has grown into a global brand, 
-                  but our core values remain unchanged. We're committed to creating premium clothing 
-                  that doesn't just meet expectations – it exceeds them.
-                </p>
-                <p>
-                  Every piece we create is a testament to our dedication to quality, innovation, 
-                  and the fashion community that inspires us every day.
-                </p>
-              </div>
-            </div>
-            <div className="relative">
-              <img
-                src="https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg"
-                alt="Fashion design process"
-                className="rounded-xl shadow-lg w-full h-96 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl"></div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -180,6 +147,7 @@ export default function AboutPage() {
           </a>
         </div>
       </section>
+      <Footer />
     </div>
   )
 }

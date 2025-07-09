@@ -219,7 +219,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(120deg, #0a352a 0%, #064e3b 40%, #1d5032 70%, #000 100%);
+  background: linear-gradient(120deg, #0a2540 0%, #1e3356 30%, #064e3b 55%, #1d5032 75%, #000 100%);
   background-size: 200% 200%;
   animation: hero-gradient-flow 18s ease-in-out infinite;
 }
