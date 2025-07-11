@@ -65,16 +65,28 @@ export default function ProductsPage() {
         .order('name')
 
       if (productsData) {
-        const formattedProducts = productsData.map(product => ({
-          id: product.id,
-          name: product.name,
-          description: product.description,
-          price: product.price,
-          sizes: product.sizes,
-          in_stock: product.in_stock,
-          image_url: product.product_images[0]?.image_url || '/assets/logo/logo.jpg',
-          category: product.categories?.[0] || { name: 'Uncategorized' }
-        }))
+        const formattedProducts = productsData.map(product => {
+          let categoryObj = { name: 'Uncategorized' };
+          if (product.categories) {
+            if (Array.isArray(product.categories)) {
+              if (product.categories[0]?.name) {
+                categoryObj = { name: product.categories[0].name };
+              }
+            } else if (product.categories?.name) {
+              categoryObj = { name: product.categories.name };
+            }
+          }
+          return {
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            sizes: product.sizes,
+            in_stock: product.in_stock,
+            image_url: product.product_images[0]?.image_url || '/assets/logo/logo.jpg',
+            category: categoryObj
+          }
+        })
         setProducts(formattedProducts)
       }
     } catch (error) {

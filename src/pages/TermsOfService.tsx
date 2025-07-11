@@ -177,8 +177,8 @@ export default function TermsOfService() {
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700">
-                  <strong>Email:</strong> legal@skatious.com<br />
-
+                  <strong>Email:</strong> support@skatious.com<br />
+                  <strong>Mobile:</strong> +91 7999856569 <br />
                 </p>
               </div>
             </section>
