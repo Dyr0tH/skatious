@@ -272,10 +272,11 @@ export default function CheckoutPage() {
       // Prepare order data (but don't save to database yet)
       const orderData = {
         user_id: user.id,
-        total_amount: finalPrice,
+        total_amount: finalPrice + 80, // Including shipping charge
         discount_amount: discountAmount,
         discount_code: discountCode,
         discount_percentage: discountPercentage,
+        shipping_charge: 80, // Add shipping charge field
         customer_email: shippingInfo.email,
         customer_mobile: shippingInfo.mobile_number,
         customer_alternate_mobile: shippingInfo.alternate_mobile,
@@ -299,8 +300,8 @@ export default function CheckoutPage() {
         item_total: (item.product?.price || 0) * item.quantity
       }))
 
-      // Initialize Razorpay payment with order data
-      await initializeRazorpayPayment({ orderData, orderItemsData }, finalPrice)
+      // Initialize Razorpay payment with order data (including shipping charge)
+      await initializeRazorpayPayment({ orderData, orderItemsData }, finalPrice + 80)
 
     } catch (error) {
       console.error('Error preparing payment:', error)
@@ -488,6 +489,12 @@ export default function CheckoutPage() {
               </div>
 
               <div className="border-t border-gray-200 pt-4 space-y-2">
+
+              <div className="flex justify-between">
+                  <span className="font-body text-gray-600">Shipping Charge</span>
+                  <span>₹80.00</span>
+                </div>
+                
                 <div className="flex justify-between">
                   <span className="font-body text-gray-600">Subtotal</span>
                   <span>₹{totalPrice.toFixed(2)}</span>
@@ -503,9 +510,10 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 
+                
                 <div className="flex justify-between text-lg font-semibold text-gray-900 border-t border-gray-200 pt-2">
                   <span>Total</span>
-                  <span>₹{finalPrice.toFixed(2)}</span>
+                  <span>₹{(finalPrice + 80).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -515,7 +523,7 @@ export default function CheckoutPage() {
               disabled={loading || paymentProcessing}
               className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white py-3 px-4 rounded-lg font-heading font-semibold text-lg transition-colors duration-200"
             >
-              {loading ? 'Processing...' : paymentProcessing ? 'Opening Payment Gateway...' : `Pay ₹${finalPrice.toFixed(2)}`}
+              {loading ? 'Processing...' : paymentProcessing ? 'Opening Payment Gateway...' : `Pay ₹${(finalPrice + 80).toFixed(2)}`}
             </button>
           </div>
         </div>
