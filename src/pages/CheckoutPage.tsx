@@ -117,18 +117,36 @@ export default function CheckoutPage() {
     }
   }
 
+  // Helper to create Razorpay order via serverless API
+  const createRazorpayOrder = async (finalPrice: number, tempOrderNumber: string) => {
+    const response = await fetch('/api/create-razorpay-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: Math.round(finalPrice * 100), // in paise
+        currency: 'INR',
+        receipt: tempOrderNumber,
+      }),
+    })
+    if (!response.ok) throw new Error('Failed to create Razorpay order')
+    return response.json()
+  }
+
   const initializeRazorpayPayment = async (orderInfo: any, finalPrice: number) => {
     try {
       // Generate a temporary order number for display
       const tempOrderNumber = `TEMP_${Date.now()}_${Math.random().toString(36).substring(2)}`
-      
+
+      // 1. Create Razorpay order via API route
+      const razorpayOrder = await createRazorpayOrder(finalPrice, tempOrderNumber)
+
       const options = {
         key: import.meta.env.RAZORPAY_KEY_ID || 'rzp_live_ntMssPF5wTWOLf',
-        amount: Math.round(finalPrice * 100), // Razorpay expects amount in paise
-        currency: 'INR',
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
         name: 'SKATIOUS',
         description: `Order #${tempOrderNumber}`,
-        receipt: tempOrderNumber,
+        order_id: razorpayOrder.id, // <-- This is the key change!
         handler: async (response: any) => {
           // Payment successful - now create the order
           await handlePaymentSuccess(orderInfo, response)
