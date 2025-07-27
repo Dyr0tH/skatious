@@ -3,10 +3,10 @@
 
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "/api/$1.ts"
     },
     {
-      "source": "/(.*)",
+      "source": "^(?!/api/).*",
       "destination": "/index.html"
     }
   ]

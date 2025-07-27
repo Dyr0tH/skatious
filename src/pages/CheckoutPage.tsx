@@ -119,7 +119,7 @@ export default function CheckoutPage() {
 
   // Helper to create Razorpay order via serverless API
   const createRazorpayOrder = async (finalPrice: number, tempOrderNumber: string) => {
-    const response = await fetch('/api/create-razorpay-order', {
+    const response = await fetch('https://skatious-razorpay-server.vercel.app/api/create-razorpay-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -141,7 +141,7 @@ export default function CheckoutPage() {
       const razorpayOrder = await createRazorpayOrder(finalPrice, tempOrderNumber)
 
       const options = {
-        key: import.meta.env.RAZORPAY_KEY_ID || 'rzp_live_ntMssPF5wTWOLf',
+        key: 'rzp_live_07OqqZuaEXjVNA',
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         name: 'SKATIOUS',
