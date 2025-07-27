@@ -5,6 +5,7 @@ import { CartProvider } from './context/CartContext'
 import Header from './components/Header'
 import HomePage from './pages/HomePage'
 import ProductsPage from './pages/ProductsPage'
+import PlayersPage from './pages/playersPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import AboutPage from './pages/AboutPage'
 import AuthPage from './pages/AuthPage'
@@ -28,6 +29,7 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/product/:productId" element={<ProductDetailPage />} />
+              <Route path="/players" element={<PlayersPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/cart" element={<CartPage />} />
