@@ -75,12 +75,6 @@ export default function Header() {
                 Products
               </Link>
               <Link
-                to="/players"
-                className="font-heading text-gray-700 hover:text-emerald-600 transition-colors duration-200"
-              >
-                Players
-              </Link>
-              <Link
                 to="/about"
                 className="font-heading text-gray-700 hover:text-emerald-600 transition-colors duration-200"
               >

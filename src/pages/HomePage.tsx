@@ -4,6 +4,8 @@ import { ArrowRight, Star, Users, Award } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ProductCard from '../components/ProductCard'
 import Footer from '../components/Footer'
+import TeamsAndPlayerse from '../components/PlayersShowcase'
+
 interface Product {
   id: string
   name: string
@@ -125,8 +127,12 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section>
+        <TeamsAndPlayerse/>
+      </section>
+
       {/* Features Section */}
-      <section className="py-16 bg-gray-50">
+      {/* <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-bold text-navy-900 mb-4">
@@ -169,17 +175,17 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Featured Products */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-bold text-navy-900 mb-4">
-              Featured Products
+              Hot Selling Products
             </h2>
             <p className="font-body text-gray-600 text-lg">
-              Discover our most popular clothing pieces chosen by style enthusiasts worldwide.
+              Discover our most popular and fast selling clothing pieces.
             </p>
           </div>
           
@@ -210,7 +216,7 @@ export default function HomePage() {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-16 bg-emerald-600">
+      {/* <section className="py-16 bg-emerald-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-display text-3xl font-bold text-white mb-4">
             Stay in the Loop
@@ -233,7 +239,7 @@ export default function HomePage() {
             </button>
           </form>
         </div>
-      </section>
+      </section> */}
       <Footer />
     </div>
   )
