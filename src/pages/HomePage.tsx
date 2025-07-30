@@ -1,17 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Star, Sparkles } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { ArrowRight, Star, Sparkles, Truck, Shield, Headphones, Award, Users, Heart, Quote } from 'lucide-react';
 import Footer from '../components/Footer';
-import TeamsAndPlayerse from '../components/PlayersShowcase';
-import PremiumProductCard from '../components/PremiumProductCard';
-import TestimonialsSection from '../components/TestimonialsSection';
-import StatsSection from '../components/StatsSection';
-import FeaturesSection from '../components/FeaturesSection';
-import FloatingElements from '../components/FloatingElements';
-import MagneticButton from '../components/MagneticButton';
-import ParallaxSection from '../components/ParallaxSection';
 
 interface Product {
   id: string;
@@ -26,397 +17,519 @@ interface Product {
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 500], [0, -250]);
-  const heroOpacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const heroParallax = useTransform(scrollY, [0, 500], [0, -150]);
 
   useEffect(() => {
-    loadFeaturedProducts();
+    // Mock products for demonstration
+    setFeaturedProducts([
+      {
+        id: '1',
+        name: 'Premium Cotton Tee',
+        description: 'Soft, comfortable cotton t-shirt with modern fit',
+        price: 29.99,
+        sizes: ['XS', 'S', 'M', 'L', 'XL'],
+        in_stock: true,
+        image_url: 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg'
+      },
+      {
+        id: '2',
+        name: 'Urban Hoodie',
+        description: 'Stylish hoodie perfect for casual wear and street style',
+        price: 49.99,
+        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+        in_stock: true,
+        image_url: 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg'
+      },
+      {
+        id: '3',
+        name: 'Classic Denim Jacket',
+        description: 'Timeless denim jacket with modern styling',
+        price: 79.99,
+        sizes: ['XS', 'S', 'M', 'L', 'XL'],
+        in_stock: true,
+        image_url: 'https://images.pexels.com/photos/1010973/pexels-photo-1010973.jpeg'
+      }
+    ]);
+    setLoading(false);
   }, []);
 
-  const loadFeaturedProducts = async () => {
-    try {
-      const { data: products } = await supabase
-        .from('products')
-        .select(`
-          id,
-          name,
-          description,
-          price,
-          sizes,
-          in_stock,
-          product_images!inner (
-            image_url,
-            order_index
-          )
-        `)
-        .limit(6);
+  const stats = [
+    { value: '100+', label: 'Happy Customers', description: 'Fashion enthusiasts worldwide' },
+    { value: '1000+', label: 'Products Sold', description: 'Premium pieces delivered' },
+    { value: '4/5', label: 'Customer Rating', description: 'Average satisfaction score' },
+    { value: '75%', label: 'Recurring Customers', description: 'Come back for more' }
+  ];
 
-      if (products) {
-        const formattedProducts = products.map(product => ({
-          id: product.id,
-          name: product.name,
-          description: product.description,
-          price: product.price,
-          sizes: product.sizes,
-          in_stock: product.in_stock,
-          image_url: product.product_images[0]?.image_url || 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg',
-        }));
-        setFeaturedProducts(formattedProducts);
-      }
-    } catch (error) {
-      console.error('Error loading featured products:', error);
-      // Mock data for demonstration
-      setFeaturedProducts([
-        {
-          id: '1',
-          name: 'Premium Cotton Tee',
-          description: 'Soft, comfortable cotton t-shirt with modern fit',
-          price: 29.99,
-          sizes: ['XS', 'S', 'M', 'L', 'XL'],
-          in_stock: false,
-          image_url: 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg'
-        },
-        {
-          id: '2',
-          name: 'Urban Hoodie',
-          description: 'Stylish hoodie perfect for casual wear and street style',
-          price: 49.99,
-          sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-          in_stock: false,
-          image_url: 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg'
-        },
-        {
-          id: '3',
-          name: 'Classic Denim Jacket',
-          description: 'Timeless denim jacket with modern styling',
-          price: 79.99,
-          sizes: ['XS', 'S', 'M', 'L', 'XL'],
-          in_stock: false,
-          image_url: 'https://images.pexels.com/photos/1010973/pexels-photo-1010973.jpeg'
-        }
-      ]);
+  const features = [
+    {
+      icon: Truck,
+      title: 'Free Global Shipping',
+      description: 'Complimentary worldwide delivery on orders over $100.'
+    },
+    {
+      icon: Shield,
+      title: 'Premium Quality',
+      description: 'Every piece crafted with finest materials and quality promise.'
+    },
+    {
+      icon: Headphones,
+      title: '24/7 Support',
+      description: 'Our fashion experts are here to help you anytime.'
     }
-    setLoading(false);
-  };
+  ];
+
+  const testimonials = [
+    {
+      name: 'Sarah Johnson',
+      role: 'Fashion Enthusiast',
+      content: 'SKATIOUS has completely transformed my wardrobe. The quality is exceptional.',
+      rating: 5,
+      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b1a1?w=100&h=100&fit=crop&crop=face'
+    },
+    {
+      name: 'Michael Chen',
+      role: 'Style Blogger',
+      content: 'The attention to detail in every piece is remarkable. Premium quality always.',
+      rating: 5,
+      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+    },
+    {
+      name: 'Emma Davis',
+      role: 'Creative Director',
+      content: 'Finally found a brand that understands modern fashion. Highly recommended!',
+      rating: 5,
+      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
+    }
+  ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
-      {/* Enhanced Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center text-white overflow-hidden">
-        {/* Parallax Background */}
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background */}
         <motion.div 
-          style={{ y: heroY, opacity: heroOpacity }}
-          className="absolute inset-0"
-        >
-          {/* Animated Glassmorphic Gradient Background */}
-          <div className="hero-animated-gradient" />
-          <div className="absolute inset-0 z-1 backdrop-blur-xl bg-white/5" />
-          
-          {/* Premium fabric image as background */}
-          <div 
-            className="absolute inset-0 opacity-20 bg-cover bg-center mix-blend-soft-light"
-            style={{
-              backgroundImage: 'url(https://images.unsplash.com/photo-1610049199961-3cd0223834ef?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwxfHxwcmVtaXVtJTIwY2xvdGhpbmd8ZW58MHx8fHwxNzUzODg5OTg0fDA&ixlib=rb-4.1.0&q=85)'
-            }}
-          />
-        </motion.div>
-
-        {/* Floating Elements */}
-        <FloatingElements />
-
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/60 z-[2]" />
+          style={{ y: heroParallax }}
+          className="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800 to-emerald-900"
+        />
         
-        <div className="relative z-[3] w-full">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 text-center">
-            {/* Animated Title */}
+        {/* Floating Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(5)].map((_, i) => (
             <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 1, ease: [0.21, 1.02, 0.73, 1] }}
-            >
-              <motion.div
-                className="flex items-center justify-center mb-6"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
-              >
-                <Sparkles className="h-8 w-8 text-emerald-400 mr-3" />
-                <span className="text-emerald-400 font-heading text-lg font-medium tracking-wide">
-                  PREMIUM COLLECTION
-                </span>
-                <Sparkles className="h-8 w-8 text-emerald-400 ml-3" />
-              </motion.div>
-
-              <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
-                <motion.span
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.8, duration: 0.8 }}
-                >
-                  Elevate Your
-                </motion.span>
-                <motion.span 
-                  className="text-emerald-400 block"
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1, duration: 0.8 }}
-                >
-                  Style Experience
-                </motion.span>
-              </h1>
-            </motion.div>
-
-            <motion.p
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2, duration: 0.8 }}
-              className="font-body text-xl sm:text-2xl text-gray-200 mb-12 max-w-4xl mx-auto leading-relaxed"
-            >
-              Discover premium clothing crafted for those who demand excellence, style, and comfort in every piece. 
-              Where luxury meets affordability.
-            </motion.p>
-
-            {/* Enhanced CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.4, duration: 0.8 }}
-              className="flex flex-col sm:flex-row gap-6 justify-center"
-            >
-              <MagneticButton
-                onClick={() => window.location.href = '/products'}
-                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-10 py-4 rounded-2xl font-heading font-semibold text-lg shadow-2xl border-2 border-emerald-300/40 backdrop-blur-xl"
-                intensity={0.4}
-              >
-                <span className="flex items-center space-x-3">
-                  <span>Shop Collection</span>
-                  <ArrowRight className="h-6 w-6" />
-                </span>
-              </MagneticButton>
-
-              <MagneticButton
-                onClick={() => window.location.href = '/about'}
-                className="border-2 border-white/80 text-white hover:bg-white/20 px-10 py-4 rounded-2xl font-heading font-semibold text-lg backdrop-blur-xl bg-white/10 shadow-2xl"
-                intensity={0.3}
-              >
-                Learn More
-              </MagneticButton>
-            </motion.div>
-
-            {/* Trust indicators */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.8, duration: 0.6 }}
-              className="flex items-center justify-center space-x-8 mt-16 text-gray-300"
-            >
-              <div className="flex items-center space-x-2">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 2 + i * 0.1, duration: 0.3 }}
-                    >
-                      <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                    </motion.div>
-                  ))}
-                </div>
-                <span className="font-heading text-lg">50K+ Reviews</span>
-              </div>
-              <div className="hidden sm:block w-1 h-6 bg-gray-400 rounded-full" />
-              <span className="font-heading text-lg">Free Global Shipping</span>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.5, duration: 0.8 }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[3]"
-        >
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center"
-          >
-            <motion.div
-              animate={{ y: [0, 20, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-1 h-3 bg-white/70 rounded-full mt-2"
-            />
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* Teams and Players Section with Parallax */}
-      <ParallaxSection speed={0.3}>
-        <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
-          <TeamsAndPlayerse />
-        </section>
-      </ParallaxSection>
-
-      {/* Enhanced Features Section */}
-      <FeaturesSection />
-
-      {/* Enhanced Featured Products */}
-      <ParallaxSection speed={0.2}>
-        <section className="py-20 bg-gradient-to-br from-white via-emerald-50/30 to-gray-50 relative overflow-hidden">
-          {/* Background decoration */}
-          <div className="absolute inset-0">
-            <motion.div
+              key={i}
+              className="absolute w-20 h-20 bg-emerald-400/10 rounded-full blur-xl"
               animate={{
+                y: [-20, 20, -20],
+                x: [-10, 10, -10],
                 scale: [1, 1.2, 1],
-                rotate: [0, 360],
               }}
               transition={{
-                duration: 20,
+                duration: 4 + i,
                 repeat: Infinity,
-                ease: "linear"
+                ease: "easeInOut",
+                delay: i * 0.5
               }}
-              className="absolute top-20 right-20 w-64 h-64 bg-emerald-100 rounded-full blur-3xl opacity-30"
+              style={{
+                left: `${20 + i * 15}%`,
+                top: `${10 + i * 15}%`,
+              }}
             />
-          </div>
+          ))}
+        </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="text-center mb-16"
+        {/* Content */}
+        <div className="relative z-10 text-center text-white px-4 max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-6"
+          >
+            <div className="flex items-center justify-center mb-4">
+              <Sparkles className="h-6 w-6 text-emerald-400 mr-2" />
+              <span className="text-emerald-400 font-semibold tracking-wide uppercase text-sm">
+                Premium Collection
+              </span>
+              <Sparkles className="h-6 w-6 text-emerald-400 ml-2" />
+            </div>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="text-5xl md:text-7xl font-bold mb-8 leading-tight"
+          >
+            Elevate Your
+            <span className="block text-emerald-400">Style Experience</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed"
+          >
+            Discover premium clothing crafted for those who demand excellence, style, and comfort in every piece.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
+          >
+            <Link
+              to="/products"
+              className="group bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-2 transform hover:scale-105 shadow-2xl"
             >
-              <h2 className="font-display text-4xl lg:text-5xl font-bold text-navy-900 mb-6">
-                Hot Selling Products
-              </h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-emerald-600 mx-auto mb-6 rounded-full" />
-              <p className="font-body text-xl text-gray-600 max-w-3xl mx-auto">
-                Discover our most popular and fast selling clothing pieces, loved by fashion enthusiasts worldwide.
-              </p>
-            </motion.div>
-            
-            {loading ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.1, duration: 0.5 }}
-                    className="bg-gray-200 animate-pulse rounded-2xl h-96"
-                  />
+              <span>Shop Collection</span>
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link
+              to="/about"
+              className="border-2 border-white/80 text-white hover:bg-white/10 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 backdrop-blur-sm transform hover:scale-105"
+            >
+              Learn More
+            </Link>
+          </motion.div>
+
+          {/* Trust Indicators */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="flex items-center justify-center space-x-8 text-gray-300"
+          >
+            <div className="flex items-center space-x-2">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                 ))}
               </div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featuredProducts.slice(0, 3).map((product, index) => (
-                  <PremiumProductCard key={product.id} product={product} index={index} />
-                ))}
-              </div>
-            )}
-            
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="text-center mt-16"
-            >
-              <MagneticButton
-                onClick={() => window.location.href = '/products'}
-                className="bg-gradient-to-r from-navy-800 to-navy-900 hover:from-navy-900 hover:to-black text-white px-10 py-4 rounded-2xl font-heading font-semibold text-lg shadow-2xl"
-                intensity={0.3}
+              <span>50K+ Reviews</span>
+            </div>
+            <div className="hidden sm:block w-1 h-6 bg-gray-400 rounded-full" />
+            <span>Free Global Shipping</span>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-navy-900 mb-6">
+              Why Choose SKATIOUS?
+            </h2>
+            <div className="w-24 h-1 bg-emerald-600 mx-auto mb-6 rounded-full" />
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              We're not just selling clothes; we're crafting experiences that elevate your style journey.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.2 }}
+                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 text-center group"
               >
-                <span className="flex items-center space-x-3">
-                  <span>View All Products</span>
-                  <ArrowRight className="h-6 w-6" />
-                </span>
-              </MagneticButton>
-            </motion.div>
+                <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-200 transition-colors">
+                  <feature.icon className="h-8 w-8 text-emerald-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-navy-900 mb-4">{feature.title}</h3>
+                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
           </div>
-        </section>
-      </ParallaxSection>
+        </div>
+      </section>
+
+      {/* Products Section */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-navy-900 mb-6">
+              Hot Selling Products
+            </h2>
+            <div className="w-24 h-1 bg-emerald-600 mx-auto mb-6 rounded-full" />
+            <p className="text-xl text-gray-600">
+              Discover our most popular and fast selling clothing pieces.
+            </p>
+          </motion.div>
+          
+          {loading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-gray-200 animate-pulse rounded-2xl h-96" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {featuredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                  className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+                >
+                  <div className="aspect-square overflow-hidden">
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-semibold text-lg text-navy-900 mb-2">{product.name}</h3>
+                    <p className="text-gray-600 text-sm mb-4">{product.description}</p>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-2xl font-bold text-navy-800">
+                        ₹{product.price.toFixed(2)}
+                      </div>
+                    </div>
+                    <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors duration-200">
+                      Add to Cart
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+          
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="text-center"
+          >
+            <Link
+              to="/products"
+              className="inline-flex items-center space-x-2 bg-navy-800 hover:bg-navy-900 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-200 transform hover:scale-105"
+            >
+              <span>View All Products</span>
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Stats Section */}
-      <StatsSection />
-
-      {/* Testimonials Section */}
-      <TestimonialsSection />
-
-      {/* Enhanced Newsletter Section */}
-      <ParallaxSection speed={0.1}>
-        <section className="py-20 bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-800 relative overflow-hidden">
-          {/* Background elements */}
+      <section className="py-24 bg-navy-900 relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0">
           <motion.div
             animate={{
-              rotate: 360,
               scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 15,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"
-          />
-          <motion.div
-            animate={{
-              rotate: -360,
-              scale: [1.2, 1, 1.2],
+              rotate: [0, 180, 360],
             }}
             transition={{
               duration: 20,
               repeat: Infinity,
               ease: "linear"
             }}
-            className="absolute bottom-10 right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"
+            className="absolute top-20 left-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"
           />
+          <motion.div
+            animate={{
+              scale: [1.2, 1, 1.2],
+              rotate: [360, 180, 0],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute bottom-20 right-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"
+          />
+        </div>
 
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="font-display text-4xl lg:text-5xl font-bold text-white mb-6">
-                Stay in the Loop
-              </h2>
-              <p className="font-body text-emerald-100 text-xl mb-12 max-w-2xl mx-auto">
-                Get the latest updates on new collections, exclusive deals, and style tips directly to your inbox.
-              </p>
-              
-              <motion.form
-                initial={{ opacity: 0, y: 20 }}
+        <div className="max-w-7xl mx-auto px-4 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Trusted by Fashion Lovers
+            </h2>
+            <div className="w-24 h-1 bg-emerald-400 mx-auto mb-6 rounded-full" />
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Numbers that speak for themselves. Join our satisfied customers who love SKATIOUS.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.3, duration: 0.6 }}
-                className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ scale: 1.05, transition: { duration: 0.3 } }}
+                className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all duration-300"
               >
-                <motion.input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-6 py-4 rounded-2xl border-2 border-emerald-400/30 focus:ring-4 focus:ring-white/20 focus:border-white bg-white/10 backdrop-blur-sm text-white placeholder-emerald-200 font-body text-lg"
-                  whileFocus={{ scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                />
-                <MagneticButton
-                  className="bg-white text-emerald-600 px-8 py-4 rounded-2xl font-heading font-semibold text-lg shadow-2xl hover:shadow-3xl"
-                  intensity={0.2}
-                >
-                  Subscribe
-                </MagneticButton>
-              </motion.form>
-            </motion.div>
+                <div className="text-4xl font-bold text-emerald-400 mb-2">{stat.value}</div>
+                <h3 className="text-xl font-semibold text-white mb-2">{stat.label}</h3>
+                <p className="text-gray-400">{stat.description}</p>
+              </motion.div>
+            ))}
           </div>
-        </section>
-      </ParallaxSection>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-navy-900 mb-6">
+              What Our Customers Say
+            </h2>
+            <div className="w-24 h-1 bg-emerald-600 mx-auto mb-6 rounded-full" />
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Don't just take our word for it. Here's what fashion lovers are saying about SKATIOUS.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.2 }}
+                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 relative"
+              >
+                <div className="absolute -top-4 -left-4 w-12 h-12 bg-emerald-600 rounded-xl shadow-lg flex items-center justify-center">
+                  <Quote className="h-6 w-6 text-white" />
+                </div>
+
+                <div className="flex items-center mb-4 ml-8">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+
+                <p className="text-gray-700 mb-6 text-lg leading-relaxed">
+                  "{testimonial.content}"
+                </p>
+
+                <div className="flex items-center">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-emerald-200 mr-4">
+                    <img
+                      src={testimonial.image}
+                      alt={testimonial.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-navy-900">{testimonial.name}</h4>
+                    <p className="text-sm text-gray-600">{testimonial.role}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-24 bg-gradient-to-r from-emerald-600 to-emerald-700 relative overflow-hidden">
+        {/* Background Effects */}
+        <motion.div
+          animate={{
+            rotate: 360,
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"
+        />
+        <motion.div
+          animate={{
+            rotate: -360,
+            scale: [1.2, 1, 1.2],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          className="absolute bottom-10 right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"
+        />
+
+        <div className="max-w-4xl mx-auto px-4 text-center relative">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Stay in the Loop
+            </h2>
+            <p className="text-emerald-100 text-xl mb-12 max-w-2xl mx-auto">
+              Get the latest updates on new collections, exclusive deals, and style tips directly to your inbox.
+            </p>
+            
+            <motion.form
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
+            >
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 px-6 py-4 rounded-2xl border-2 border-emerald-400/30 focus:ring-4 focus:ring-white/20 focus:border-white bg-white/10 backdrop-blur-sm text-white placeholder-emerald-200 text-lg"
+              />
+              <button
+                type="submit"
+                className="bg-white text-emerald-600 px-8 py-4 rounded-2xl font-semibold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
+              >
+                Subscribe
+              </button>
+            </motion.form>
+          </motion.div>
+        </div>
+      </section>
 
       <Footer />
     </div>
