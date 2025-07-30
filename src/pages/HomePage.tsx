@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Star, Sparkles, Truck, Shield, Headphones, Award, Users, Heart, Quote } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import Footer from '../components/Footer';
 
 interface Product {
@@ -21,38 +22,105 @@ export default function HomePage() {
   const heroParallax = useTransform(scrollY, [0, 500], [0, -150]);
 
   useEffect(() => {
-    // Mock products for demonstration
-    setFeaturedProducts([
-      {
-        id: '1',
-        name: 'Premium Cotton Tee',
-        description: 'Soft, comfortable cotton t-shirt with modern fit',
-        price: 29.99,
-        sizes: ['XS', 'S', 'M', 'L', 'XL'],
-        in_stock: true,
-        image_url: 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg'
-      },
-      {
-        id: '2',
-        name: 'Urban Hoodie',
-        description: 'Stylish hoodie perfect for casual wear and street style',
-        price: 49.99,
-        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-        in_stock: true,
-        image_url: 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg'
-      },
-      {
-        id: '3',
-        name: 'Classic Denim Jacket',
-        description: 'Timeless denim jacket with modern styling',
-        price: 79.99,
-        sizes: ['XS', 'S', 'M', 'L', 'XL'],
-        in_stock: true,
-        image_url: 'https://images.pexels.com/photos/1010973/pexels-photo-1010973.jpeg'
-      }
-    ]);
-    setLoading(false);
+    loadFeaturedProducts();
   }, []);
+
+  const loadFeaturedProducts = async () => {
+    try {
+      const { data: products } = await supabase
+        .from('products')
+        .select(`
+          id,
+          name,
+          description,
+          price,
+          sizes,
+          in_stock,
+          product_images!inner (
+            image_url,
+            order_index
+          )
+        `)
+        .limit(6);
+
+      if (products && products.length > 0) {
+        const formattedProducts = products.map(product => ({
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          sizes: product.sizes,
+          in_stock: product.in_stock,
+          image_url: product.product_images[0]?.image_url || 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg',
+        }));
+        setFeaturedProducts(formattedProducts);
+      } else {
+        // Fallback to mock data only if no real products found
+        setFeaturedProducts([
+          {
+            id: '1',
+            name: 'Premium Cotton Tee',
+            description: 'Soft, comfortable cotton t-shirt with modern fit',
+            price: 29.99,
+            sizes: ['XS', 'S', 'M', 'L', 'XL'],
+            in_stock: true,
+            image_url: 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg'
+          },
+          {
+            id: '2',
+            name: 'Urban Hoodie',
+            description: 'Stylish hoodie perfect for casual wear and street style',
+            price: 49.99,
+            sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+            in_stock: true,
+            image_url: 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg'
+          },
+          {
+            id: '3',
+            name: 'Classic Denim Jacket',
+            description: 'Timeless denim jacket with modern styling',
+            price: 79.99,
+            sizes: ['XS', 'S', 'M', 'L', 'XL'],
+            in_stock: true,
+            image_url: 'https://images.pexels.com/photos/1010973/pexels-photo-1010973.jpeg'
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading featured products:', error);
+      // Mock data for demonstration if database error
+      setFeaturedProducts([
+        {
+          id: '1',
+          name: 'Premium Cotton Tee',
+          description: 'Soft, comfortable cotton t-shirt with modern fit',
+          price: 29.99,
+          sizes: ['XS', 'S', 'M', 'L', 'XL'],
+          in_stock: true,
+          image_url: 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg'
+        },
+        {
+          id: '2',
+          name: 'Urban Hoodie',
+          description: 'Stylish hoodie perfect for casual wear and street style',
+          price: 49.99,
+          sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+          in_stock: true,
+          image_url: 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg'
+        },
+        {
+          id: '3',
+          name: 'Classic Denim Jacket',
+          description: 'Timeless denim jacket with modern styling',
+          price: 79.99,
+          sizes: ['XS', 'S', 'M', 'L', 'XL'],
+          in_stock: true,
+          image_url: 'https://images.pexels.com/photos/1010973/pexels-photo-1010973.jpeg'
+        }
+      ]);
+    }
+    setLoading(false);
+  };
 
   const stats = [
     { value: '100+', label: 'Happy Customers', description: 'Fashion enthusiasts worldwide' },
@@ -103,127 +171,288 @@ export default function HomePage() {
     }
   ];
 
+  // Scroll reveal animation variants
+  const scrollRevealVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 75,
+      scale: 0.9
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.8,
+        ease: [0.21, 1.02, 0.73, 1]
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
+      {/* Enhanced Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background */}
+        {/* Animated Background */}
         <motion.div 
           style={{ y: heroParallax }}
           className="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800 to-emerald-900"
         />
         
-        {/* Floating Elements */}
+        {/* Enhanced Floating Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className={`absolute rounded-full blur-xl ${
+                i % 3 === 0 ? 'bg-emerald-400/10' :
+                i % 3 === 1 ? 'bg-blue-400/10' : 'bg-purple-400/10'
+              }`}
+              style={{
+                width: `${60 + i * 15}px`,
+                height: `${60 + i * 15}px`,
+                left: `${10 + i * 12}%`,
+                top: `${15 + i * 10}%`,
+              }}
+              animate={{
+                y: [-30, 30, -30],
+                x: [-20, 20, -20],
+                scale: [1, 1.3, 1],
+                rotate: [0, 180, 360],
+              }}
+              transition={{
+                duration: 6 + i * 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.3
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Animated Geometric Shapes */}
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(5)].map((_, i) => (
             <motion.div
-              key={i}
-              className="absolute w-20 h-20 bg-emerald-400/10 rounded-full blur-xl"
+              key={`shape-${i}`}
+              className="absolute opacity-5"
+              style={{
+                left: `${20 + i * 20}%`,
+                top: `${20 + i * 15}%`,
+              }}
               animate={{
-                y: [-20, 20, -20],
-                x: [-10, 10, -10],
+                rotate: [0, 360],
                 scale: [1, 1.2, 1],
               }}
               transition={{
-                duration: 4 + i,
+                duration: 15 + i * 5,
                 repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 0.5
+                ease: "linear"
               }}
-              style={{
-                left: `${20 + i * 15}%`,
-                top: `${10 + i * 15}%`,
-              }}
-            />
+            >
+              <div className={`w-32 h-32 ${
+                i % 2 === 0 ? 'rounded-full' : 'rounded-2xl rotate-45'
+              } bg-gradient-to-r from-emerald-500/20 to-blue-500/20 backdrop-blur-sm`} />
+            </motion.div>
           ))}
         </div>
 
         {/* Content */}
         <div className="relative z-10 text-center text-white px-4 max-w-6xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             className="mb-6"
           >
             <div className="flex items-center justify-center mb-4">
-              <Sparkles className="h-6 w-6 text-emerald-400 mr-2" />
-              <span className="text-emerald-400 font-semibold tracking-wide uppercase text-sm">
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              >
+                <Sparkles className="h-6 w-6 text-emerald-400 mr-2" />
+              </motion.div>
+              <motion.span 
+                className="text-emerald-400 font-semibold tracking-wide uppercase text-sm"
+                animate={{ 
+                  textShadow: [
+                    "0 0 10px rgba(16, 185, 129, 0.5)",
+                    "0 0 20px rgba(16, 185, 129, 0.8)",
+                    "0 0 10px rgba(16, 185, 129, 0.5)"
+                  ]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
                 Premium Collection
-              </span>
-              <Sparkles className="h-6 w-6 text-emerald-400 ml-2" />
+              </motion.span>
+              <motion.div
+                animate={{ rotate: [360, 0] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              >
+                <Sparkles className="h-6 w-6 text-emerald-400 ml-2" />
+              </motion.div>
             </div>
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
+            initial={{ opacity: 0, y: 100, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 1.5, delay: 0.3, ease: [0.21, 1.02, 0.73, 1] }}
             className="text-5xl md:text-7xl font-bold mb-8 leading-tight"
           >
-            Elevate Your
-            <span className="block text-emerald-400">Style Experience</span>
+            <motion.span
+              animate={{ 
+                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+              }}
+              transition={{ duration: 5, repeat: Infinity }}
+              className="bg-gradient-to-r from-white via-gray-100 to-white bg-300% bg-clip-text"
+            >
+              Elevate Your
+            </motion.span>
+            <motion.span 
+              className="block bg-gradient-to-r from-emerald-400 via-emerald-300 to-emerald-400 bg-clip-text text-transparent"
+              animate={{ 
+                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+              }}
+              transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
+            >
+              Style Experience
+            </motion.span>
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 1, delay: 0.6 }}
             className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed"
           >
             Discover premium clothing crafted for those who demand excellence, style, and comfort in every piece.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
             className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
           >
-            <Link
-              to="/products"
-              className="group bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-2 transform hover:scale-105 shadow-2xl"
+            <motion.div
+              whileHover={{ 
+                scale: 1.05,
+                boxShadow: "0 25px 50px -12px rgba(16, 185, 129, 0.4)"
+              }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <span>Shop Collection</span>
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              to="/about"
-              className="border-2 border-white/80 text-white hover:bg-white/10 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 backdrop-blur-sm transform hover:scale-105"
+              <Link
+                to="/products"
+                className="group bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-2 shadow-2xl relative overflow-hidden"
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  whileHover={{ scale: 1.1 }}
+                />
+                <span className="relative z-10">Shop Collection</span>
+                <motion.div
+                  animate={{ x: [0, 5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="relative z-10"
+                >
+                  <ArrowRight className="h-5 w-5" />
+                </motion.div>
+              </Link>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ 
+                scale: 1.05,
+                backgroundColor: "rgba(255, 255, 255, 0.15)"
+              }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              Learn More
-            </Link>
+              <Link
+                to="/about"
+                className="border-2 border-white/80 text-white hover:bg-white/10 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 backdrop-blur-sm shadow-2xl"
+              >
+                Learn More
+              </Link>
+            </motion.div>
           </motion.div>
 
-          {/* Trust Indicators */}
+          {/* Enhanced Trust Indicators */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1 }}
             className="flex items-center justify-center space-x-8 text-gray-300"
           >
             <div className="flex items-center space-x-2">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ 
+                      duration: 0.3,
+                      delay: 1.2 + i * 0.1,
+                      type: "spring",
+                      stiffness: 500
+                    }}
+                  >
+                    <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                  </motion.div>
                 ))}
               </div>
-              <span>50K+ Reviews</span>
+              <motion.span
+                animate={{ opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                50K+ Reviews
+              </motion.span>
             </div>
             <div className="hidden sm:block w-1 h-6 bg-gray-400 rounded-full" />
-            <span>Free Global Shipping</span>
+            <motion.span
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+            >
+              Free Global Shipping
+            </motion.span>
           </motion.div>
         </div>
+
+        {/* Animated Scroll Indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2, duration: 1 }}
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10"
+        >
+          <motion.div
+            animate={{ y: [0, 15, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center"
+          >
+            <motion.div
+              animate={{ y: [0, 25, 0], opacity: [1, 0, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-1 h-3 bg-white/70 rounded-full mt-2"
+            />
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-24 bg-gray-50">
+      {/* Features Section with Scroll Reveal */}
+      <motion.section 
+        className="py-24 bg-gray-50"
+        variants={scrollRevealVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+      >
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            variants={scrollRevealVariants}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-navy-900 mb-6">
@@ -239,11 +468,9 @@ export default function HomePage() {
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                variants={scrollRevealVariants}
+                transition={{ delay: index * 0.2 }}
+                whileHover={{ y: -12, transition: { duration: 0.3 } }}
                 className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 text-center group"
               >
                 <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-200 transition-colors">
@@ -255,16 +482,19 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Products Section */}
-      <section className="py-24 bg-white">
+      {/* Products Section with Scroll Reveal */}
+      <motion.section 
+        className="py-24 bg-white"
+        variants={scrollRevealVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+      >
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            variants={scrollRevealVariants}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-navy-900 mb-6">
@@ -279,26 +509,31 @@ export default function HomePage() {
           {loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-gray-200 animate-pulse rounded-2xl h-96" />
+                <motion.div 
+                  key={i} 
+                  className="bg-gray-200 animate-pulse rounded-2xl h-96"
+                  variants={scrollRevealVariants}
+                  transition={{ delay: i * 0.1 }}
+                />
               ))}
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {featuredProducts.map((product, index) => (
+              {featuredProducts.slice(0, 3).map((product, index) => (
                 <motion.div
                   key={product.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                  variants={scrollRevealVariants}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -12, transition: { duration: 0.3 } }}
                   className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
                 >
                   <div className="aspect-square overflow-hidden">
-                    <img
+                    <motion.img
                       src={product.image_url}
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover"
+                      whileHover={{ scale: 1.1 }}
+                      transition={{ duration: 0.4 }}
                     />
                   </div>
                   <div className="p-6">
@@ -309,9 +544,13 @@ export default function HomePage() {
                         ₹{product.price.toFixed(2)}
                       </div>
                     </div>
-                    <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors duration-200">
+                    <motion.button 
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors duration-200"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
                       Add to Cart
-                    </button>
+                    </motion.button>
                   </div>
                 </motion.div>
               ))}
@@ -319,25 +558,34 @@ export default function HomePage() {
           )}
           
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.5, duration: 0.6 }}
+            variants={scrollRevealVariants}
+            transition={{ delay: 0.5 }}
             className="text-center"
           >
-            <Link
-              to="/products"
-              className="inline-flex items-center space-x-2 bg-navy-800 hover:bg-navy-900 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-200 transform hover:scale-105"
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <span>View All Products</span>
-              <ArrowRight className="h-5 w-5" />
-            </Link>
+              <Link
+                to="/products"
+                className="inline-flex items-center space-x-2 bg-navy-800 hover:bg-navy-900 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-200 shadow-lg"
+              >
+                <span>View All Products</span>
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Stats Section */}
-      <section className="py-24 bg-navy-900 relative overflow-hidden">
+      {/* Stats Section with Scroll Reveal */}
+      <motion.section 
+        className="py-24 bg-navy-900 relative overflow-hidden"
+        variants={scrollRevealVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+      >
         {/* Background Effects */}
         <div className="absolute inset-0">
           <motion.div
@@ -368,10 +616,7 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto px-4 relative">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            variants={scrollRevealVariants}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -387,10 +632,8 @@ export default function HomePage() {
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+                variants={scrollRevealVariants}
+                transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.05, transition: { duration: 0.3 } }}
                 className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all duration-300"
               >
@@ -401,16 +644,19 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Testimonials Section */}
-      <section className="py-24 bg-gray-50">
+      {/* Testimonials Section with Scroll Reveal */}
+      <motion.section 
+        className="py-24 bg-gray-50"
+        variants={scrollRevealVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+      >
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            variants={scrollRevealVariants}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-navy-900 mb-6">
@@ -426,11 +672,9 @@ export default function HomePage() {
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                variants={scrollRevealVariants}
+                transition={{ delay: index * 0.2 }}
+                whileHover={{ y: -12, transition: { duration: 0.3 } }}
                 className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 relative"
               >
                 <div className="absolute -top-4 -left-4 w-12 h-12 bg-emerald-600 rounded-xl shadow-lg flex items-center justify-center">
@@ -464,10 +708,16 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Newsletter Section */}
-      <section className="py-24 bg-gradient-to-r from-emerald-600 to-emerald-700 relative overflow-hidden">
+      {/* Newsletter Section with Scroll Reveal */}
+      <motion.section 
+        className="py-24 bg-gradient-to-r from-emerald-600 to-emerald-700 relative overflow-hidden"
+        variants={scrollRevealVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+      >
         {/* Background Effects */}
         <motion.div
           animate={{
@@ -495,12 +745,7 @@ export default function HomePage() {
         />
 
         <div className="max-w-4xl mx-auto px-4 text-center relative">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
+          <motion.div variants={scrollRevealVariants}>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Stay in the Loop
             </h2>
@@ -509,27 +754,28 @@ export default function HomePage() {
             </p>
             
             <motion.form
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3, duration: 0.6 }}
+              variants={scrollRevealVariants}
+              transition={{ delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
             >
-              <input
+              <motion.input
                 type="email"
                 placeholder="Enter your email"
                 className="flex-1 px-6 py-4 rounded-2xl border-2 border-emerald-400/30 focus:ring-4 focus:ring-white/20 focus:border-white bg-white/10 backdrop-blur-sm text-white placeholder-emerald-200 text-lg"
+                whileFocus={{ scale: 1.02 }}
               />
-              <button
+              <motion.button
                 type="submit"
-                className="bg-white text-emerald-600 px-8 py-4 rounded-2xl font-semibold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
+                className="bg-white text-emerald-600 px-8 py-4 rounded-2xl font-semibold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 Subscribe
-              </button>
+              </motion.button>
             </motion.form>
           </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       <Footer />
     </div>
