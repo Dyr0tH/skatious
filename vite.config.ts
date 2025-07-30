@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    allowedHosts: ['*', "55e5968e-321a-4037-a8d2-067fcf1b3b38.preview.emergentagent.com", "vscode-55e5968e-321a-4037-a8d2-067fcf1b3b38.preview.emergentagent.com"]
+    allowedHosts: ['*', "55e5968e-321a-4037-a8d2-067fcf1b3b38.preview.emergentagent.com", "vscode-55e5968e-321a-4037-a8d2-067fcf1b3b38.preview.emergentagent.com", "rich-interactions.preview.emergentagent.com"]
   },
 
   optimizeDeps: {
