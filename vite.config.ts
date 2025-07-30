@@ -8,9 +8,9 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    allowedHosts: ['*', 'e7596918-5ea3-4390-beb9-1eafe82bec3e-00-12858xkq6katu.worf.replit.dev']
+    allowedHosts: ['*', "55e5968e-321a-4037-a8d2-067fcf1b3b38.preview.emergentagent.com"]
   },
-  
+
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
