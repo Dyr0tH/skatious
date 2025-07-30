@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { motion, useAnimation, useMotionValue, useTransform } from 'framer-motion';
+import { motion, useAnimation } from 'framer-motion';
 
 interface AnimatedCounterProps {
   end: number;
@@ -11,33 +11,34 @@ interface AnimatedCounterProps {
 
 export default function AnimatedCounter({ end, duration = 2, suffix = '', className = '' }: AnimatedCounterProps) {
   const controls = useAnimation();
+  const [count, setCount] = useState(0);
   const { ref, inView } = useInView({
     threshold: 0.3,
     triggerOnce: true,
   });
 
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (latest) => Math.round(latest));
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (inView) {
       controls.start({
         scale: [1, 1.1, 1],
         transition: { duration: 0.5, ease: "easeOut" }
       });
       
-      count.set(0);
-      const interval = setInterval(() => {
-        count.set(count.get() + end / (duration * 60));
-        if (count.get() >= end) {
-          count.set(end);
-          clearInterval(interval);
+      let start = 0;
+      const increment = end / (duration * 60); // 60fps
+      const timer = setInterval(() => {
+        start += increment;
+        if (start >= end) {
+          setCount(end);
+          clearInterval(timer);
+        } else {
+          setCount(Math.floor(start));
         }
       }, 1000 / 60);
 
-      return () => clearInterval(interval);
+      return () => clearInterval(timer);
     }
-  }, [inView, controls, count, end, duration]);
+  }, [inView, controls, end, duration]);
 
   return (
     <motion.div
@@ -46,7 +47,7 @@ export default function AnimatedCounter({ end, duration = 2, suffix = '', classN
       className={className}
     >
       <motion.span className="text-4xl font-bold text-emerald-600">
-        {rounded}
+        {count}
         {suffix}
       </motion.span>
     </motion.div>
