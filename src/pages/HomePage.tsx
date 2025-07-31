@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Star, Sparkles, Truck, Shield, Headphones, Award, Users, Heart, Quote } from 'lucide-react';
+import { motion, useScroll, useTransform, easeInOut } from 'framer-motion';
+import { ArrowRight, Star, Sparkles, Truck, Shield, Headphones, Quote } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import Footer from '../components/Footer';
+import ProductCard from '../components/ProductCard';
 
 interface Product {
   id: string;
@@ -126,14 +127,14 @@ export default function HomePage() {
     { value: '100+', label: 'Happy Customers', description: 'Fashion enthusiasts worldwide' },
     { value: '1000+', label: 'Products Sold', description: 'Premium pieces delivered' },
     { value: '4/5', label: 'Customer Rating', description: 'Average satisfaction score' },
-    { value: '75%', label: 'Recurring Customers', description: 'Come back for more' }
+    { value: '75+', label: 'Recurring Customers', description: 'Come back for more' }
   ];
 
   const features = [
     {
       icon: Truck,
-      title: 'Free Global Shipping',
-      description: 'Complimentary worldwide delivery on orders over $100.'
+      title: 'All India Shipping',
+      description: 'India wide delivery.'
     },
     {
       icon: Shield,
@@ -143,31 +144,25 @@ export default function HomePage() {
     {
       icon: Headphones,
       title: '24/7 Support',
-      description: 'Our fashion experts are here to help you anytime.'
+      description: 'Our Brand is always available to help you anytime.'
     }
   ];
 
   const testimonials = [
     {
-      name: 'Sarah Johnson',
-      role: 'Fashion Enthusiast',
-      content: 'SKATIOUS has completely transformed my wardrobe. The quality is exceptional.',
+      name: 'Hassan',
+      content: 'SKATIOUS understands the fans at heart. The quality is exceptional.',
       rating: 5,
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b1a1?w=100&h=100&fit=crop&crop=face'
     },
     {
-      name: 'Michael Chen',
-      role: 'Style Blogger',
-      content: 'The attention to detail in every piece is remarkable. Premium quality always.',
+      name: 'Raj',
+      content: 'The attention to detail in every piece is remarkable. Premium quality.',
       rating: 5,
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
     },
     {
-      name: 'Emma Davis',
-      role: 'Creative Director',
-      content: 'Finally found a brand that understands modern fashion. Highly recommended!',
+      name: 'Divyansh',
+      content: 'Finally found a brand that understands sports fashion. Highly recommended!',
       rating: 5,
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
     }
   ];
 
@@ -184,10 +179,67 @@ export default function HomePage() {
       scale: 1,
       transition: {
         duration: 0.8,
-        ease: [0.21, 1.02, 0.73, 1]
+        ease: easeInOut
       }
     }
   };
+
+  // CountUp component with "start" prop for manual trigger and slower animation
+  function CountUp({ end, duration = 3, start = false, ...props }: { end: number | string, duration?: number, start?: boolean }) {
+    const [count, setCount] = useState(0);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+      if (!start) return;
+      let startVal = 0;
+      let endNum = typeof end === 'string' && end.includes('+')
+        ? parseInt(end)
+        : typeof end === 'string' && end.includes('/')
+          ? parseFloat(end)
+          : Number(end);
+      if (isNaN(endNum)) endNum = 0;
+      const increment = endNum / (duration * 80); // slower
+      let frame = 0;
+      const totalFrames = duration * 80;
+      intervalRef.current = setInterval(() => {
+        frame++;
+        if (frame >= totalFrames) {
+          setCount(endNum);
+          if (intervalRef.current) clearInterval(intervalRef.current);
+        } else {
+          setCount(Number((startVal + increment * frame).toFixed(0)));
+        }
+      }, 1000 / 80);
+      return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      };
+    }, [end, duration, start]);
+    let suffix = '';
+    if (typeof end === 'string' && end.includes('+')) suffix = '+';
+    if (typeof end === 'string' && end.includes('/')) suffix = end.slice(end.indexOf('/'));
+    return (
+      <span {...props}>
+        {count}
+        {suffix}
+      </span>
+    );
+  }
+
+  const [statsInView, setStatsInView] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!statsRef.current) return;
+      const rect = statsRef.current.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        setStatsInView(true);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -333,7 +385,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
+            className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16"
           >
             <motion.div
               whileHover={{ 
@@ -372,7 +424,7 @@ export default function HomePage() {
             >
               <Link
                 to="/about"
-                className="border-2 border-white/80 text-white hover:bg-white/10 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 backdrop-blur-sm shadow-2xl"
+                className="border-2 border-white/80 text-white hover:bg-white/10 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 backdrop-blur-sm shadow-2xl  min-w-[200px]"
               >
                 Learn More
               </Link>
@@ -408,7 +460,7 @@ export default function HomePage() {
                 animate={{ opacity: [0.7, 1, 0.7] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                50K+ Reviews
+                1000+ Reviews
               </motion.span>
             </div>
             <div className="hidden sm:block w-1 h-6 bg-gray-400 rounded-full" />
@@ -416,7 +468,7 @@ export default function HomePage() {
               animate={{ opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
             >
-              Free Global Shipping
+              All India Shipping
             </motion.span>
           </motion.div>
         </div>
@@ -509,50 +561,16 @@ export default function HomePage() {
           {loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[...Array(3)].map((_, i) => (
-                <motion.div 
+                <div 
                   key={i} 
                   className="bg-gray-200 animate-pulse rounded-2xl h-96"
-                  variants={scrollRevealVariants}
-                  transition={{ delay: i * 0.1 }}
                 />
               ))}
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {featuredProducts.slice(0, 3).map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  variants={scrollRevealVariants}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -12, transition: { duration: 0.3 } }}
-                  className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
-                >
-                  <div className="aspect-square overflow-hidden">
-                    <motion.img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.4 }}
-                    />
-                  </div>
-                  <div className="p-6">
-                    <h3 className="font-semibold text-lg text-navy-900 mb-2">{product.name}</h3>
-                    <p className="text-gray-600 text-sm mb-4">{product.description}</p>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="text-2xl font-bold text-navy-800">
-                        ₹{product.price.toFixed(2)}
-                      </div>
-                    </div>
-                    <motion.button 
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors duration-200"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      Add to Cart
-                    </motion.button>
-                  </div>
-                </motion.div>
+              {featuredProducts.slice(0, 3).map((product) => (
+                <ProductCard key={product.id} product={product} />
               ))}
             </div>
           )}
@@ -614,7 +632,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 relative">
+        <div className="max-w-7xl mx-auto px-4 relative" ref={statsRef}>
           <motion.div
             variants={scrollRevealVariants}
             className="text-center mb-16"
@@ -637,7 +655,9 @@ export default function HomePage() {
                 whileHover={{ scale: 1.05, transition: { duration: 0.3 } }}
                 className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all duration-300"
               >
-                <div className="text-4xl font-bold text-emerald-400 mb-2">{stat.value}</div>
+                <div className="text-4xl font-bold text-emerald-400 mb-2">
+                  <CountUp end={stat.value} start={statsInView} duration={3.5} />
+                </div>
                 <h3 className="text-xl font-semibold text-white mb-2">{stat.label}</h3>
                 <p className="text-gray-400">{stat.description}</p>
               </motion.div>
@@ -692,16 +712,8 @@ export default function HomePage() {
                 </p>
 
                 <div className="flex items-center">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-emerald-200 mr-4">
-                    <img
-                      src={testimonial.image}
-                      alt={testimonial.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
                   <div>
                     <h4 className="font-semibold text-navy-900">{testimonial.name}</h4>
-                    <p className="text-sm text-gray-600">{testimonial.role}</p>
                   </div>
                 </div>
               </motion.div>

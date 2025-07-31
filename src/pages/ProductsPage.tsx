@@ -65,15 +65,15 @@ export default function ProductsPage() {
         .order('name')
 
       if (productsData) {
-        const formattedProducts = productsData.map(product => {
+        const formattedProducts = productsData.map((product: any) => {
           let categoryObj = { name: 'Uncategorized' };
           if (product.categories) {
             if (Array.isArray(product.categories)) {
               if (product.categories[0]?.name) {
                 categoryObj = { name: product.categories[0].name };
               }
-            } else if (product.categories?.name) {
-              categoryObj = { name: product.categories.name };
+            } else if ((product.categories as { name?: string })?.name) {
+                categoryObj = { name: (product.categories as { name: string }).name };
             }
           }
           return {
