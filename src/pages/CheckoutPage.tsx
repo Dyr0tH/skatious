@@ -294,7 +294,6 @@ export default function CheckoutPage() {
         discount_amount: discountAmount,
         discount_code: discountCode,
         discount_percentage: discountPercentage,
-        shipping_charge: 80, // Add shipping charge field
         customer_email: shippingInfo.email,
         customer_mobile: shippingInfo.mobile_number,
         customer_alternate_mobile: shippingInfo.alternate_mobile,
@@ -319,7 +318,7 @@ export default function CheckoutPage() {
       }))
 
       // Initialize Razorpay payment with order data (including shipping charge)
-      await initializeRazorpayPayment({ orderData, orderItemsData }, finalPrice + 80)
+      await initializeRazorpayPayment({ orderData, orderItemsData }, finalPrice + 0)
 
     } catch (error) {
       console.error('Error preparing payment:', error)
