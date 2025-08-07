@@ -318,7 +318,7 @@ export default function CheckoutPage() {
       }))
 
       // Initialize Razorpay payment with order data (including shipping charge)
-      await initializeRazorpayPayment({ orderData, orderItemsData }, finalPrice + 0)
+      await initializeRazorpayPayment({ orderData, orderItemsData }, finalPrice + 80)
 
     } catch (error) {
       console.error('Error preparing payment:', error)
