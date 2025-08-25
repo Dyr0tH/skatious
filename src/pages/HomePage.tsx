@@ -5,6 +5,7 @@ import { ArrowRight, Star, Sparkles, Truck, Shield, Headphones, Quote } from 'lu
 import { supabase } from '../lib/supabase';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
+import PlayersShowcase from '../components/PlayersShowcase';
 
 interface Product {
   id: string;
@@ -514,6 +515,7 @@ export default function HomePage() {
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               We're not just selling clothes; we're crafting experiences that elevate your style journey.
             </p>
+
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -534,6 +536,8 @@ export default function HomePage() {
             ))}
           </div>
         </div>
+
+        <PlayersShowcase/>
       </motion.section>
 
       {/* Products Section with Scroll Reveal */}

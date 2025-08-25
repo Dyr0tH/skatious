@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { Filter, Search } from 'lucide-react'
+import Fuse, { type IFuseOptions } from 'fuse.js'
 import { supabase } from '../lib/supabase'
 import ProductCard from '../components/ProductCard'
 import Footer from '../components/Footer'
@@ -144,11 +145,23 @@ export default function ProductsPage() {
     setLoading(false)
   }
 
-  const filteredProducts = products
-    .filter(product => 
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+  const fuse = useMemo(() => {
+    const options: IFuseOptions<Product> = {
+      keys: ['name', 'description'],
+      threshold: 0.4, // 0 = perfect match, 1 = match anything. Adjust as needed.
+      includeScore: true,
+    };
+    return new Fuse(products, options);
+  }, [products]);
+
+  const searchResults = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return products;
+    }
+    return fuse.search(searchTerm).map(result => result.item);
+  }, [searchTerm, products, fuse]);
+
+  const filteredProducts = searchResults
     .filter(product => 
       selectedCategory === '' || product.category?.name === selectedCategory
     )
