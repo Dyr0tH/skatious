@@ -56,6 +56,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false)
   const [paymentProcessing, setPaymentProcessing] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showCODConfirmModal, setShowCODConfirmModal] = useState(false)
   const [paymentModalData, setPaymentModalData] = useState<{
     type: 'success' | 'failure' | 'cancelled'
     message: string
@@ -258,6 +259,131 @@ export default function CheckoutPage() {
       setShowPaymentModal(true)
     } finally {
       setPaymentProcessing(false)
+    }
+  }
+
+  const handleCODOrder = async () => {
+    setLoading(true)
+
+    try {
+      // Check session before proceeding
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!user || !sessionData.session) {
+        alert('Your session has expired. Please log in again to place an order.');
+        navigate('/auth');
+        setLoading(false);
+        return;
+      }
+
+      if (!user) {
+        alert('Please sign in to place an order')
+        navigate('/auth')
+        return
+      }
+
+      const totalPrice = getCartTotal()
+      const discountAmount = (totalPrice * discountPercentage) / 100
+      const finalPrice = getFinalTotal()
+
+      // Create order data for COD
+      const orderData = {
+        user_id: user.id,
+        total_amount: finalPrice + 80, // Including shipping charge
+        discount_amount: discountAmount,
+        discount_code: discountCode,
+        discount_percentage: discountPercentage,
+        customer_email: shippingInfo.email,
+        customer_mobile: shippingInfo.mobile_number,
+        customer_alternate_mobile: shippingInfo.alternate_mobile,
+        shipping_country: shippingInfo.country,
+        shipping_state: shippingInfo.state,
+        shipping_city: shippingInfo.city,
+        shipping_pin_code: shippingInfo.pin_code,
+        shipping_full_address: shippingInfo.full_address,
+        status: 'pending',
+        payment_method: 'cod'
+      }
+
+      // Create order in database
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single()
+
+      if (orderError) {
+        console.error('Error creating COD order:', orderError)
+        setPaymentModalData({
+          type: 'failure',
+          message: 'Error creating your order. Please try again.'
+        })
+        setShowPaymentModal(true)
+        return
+      }
+
+      // Create order items
+      const orderItemsData = items.map(item => ({
+        order_id: order.id,
+        product_id: item.product_id,
+        product_name: item.product?.name || 'Unknown Product',
+        product_price: item.product?.price || 0,
+        product_description: (item.product as Product)?.description || '',
+        product_image_url: item.product?.product_images?.[0]?.image_url || '',
+        size: item.size,
+        quantity: item.quantity,
+        item_total: (item.product?.price || 0) * item.quantity
+      }))
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItemsData)
+
+      if (itemsError) {
+        console.error('Error creating order items:', itemsError)
+        setPaymentModalData({
+          type: 'failure',
+          message: 'Error creating your order items. Please contact support.'
+        })
+        setShowPaymentModal(true)
+        return
+      }
+
+      // Update/create user profile with shipping info
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: user!.id,
+          full_name: shippingInfo.full_name,
+          email: shippingInfo.email,
+          mobile_number: shippingInfo.mobile_number,
+          alternate_mobile: shippingInfo.alternate_mobile,
+          country: shippingInfo.country,
+          state: shippingInfo.state,
+          city: shippingInfo.city,
+          pin_code: shippingInfo.pin_code,
+          full_address: shippingInfo.full_address
+        })
+
+      // Clear cart
+      await clearCart()
+      
+      // Show success modal
+      setPaymentModalData({
+        type: 'success',
+        message: 'Order placed successfully! You will pay cash on delivery.',
+        orderNumber: order.order_number
+      })
+      setShowPaymentModal(true)
+
+    } catch (error) {
+      console.error('Error placing COD order:', error)
+      setPaymentModalData({
+        type: 'failure',
+        message: 'Error placing your order. Please try again.'
+      })
+      setShowPaymentModal(true)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -542,6 +668,14 @@ export default function CheckoutPage() {
             >
               {loading ? 'Processing...' : paymentProcessing ? 'Opening Payment Gateway...' : `Pay ₹${(finalPrice + 80).toFixed(2)}`}
             </button>
+
+            <button
+              onClick={() => setShowCODConfirmModal(true)}
+              disabled={loading}
+              className="w-full bg-white hover:bg-green-50 disabled:bg-gray-100 disabled:text-gray-400 text-green-600 border-2 border-green-600 hover:border-green-700 py-3 px-4 rounded-lg font-heading font-semibold text-lg transition-colors duration-200 mt-3"
+            >
+              {loading ? 'Processing...' : 'Pay using COD (Cash on Delivery)'}
+            </button>
           </div>
         </div>
       </div>
@@ -625,6 +759,71 @@ export default function CheckoutPage() {
                     Continue Shopping
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* COD Confirmation Modal */}
+      {showCODConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowCODConfirmModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className="text-center">
+              {/* Icon */}
+              <div className="mx-auto mb-4">
+                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto">
+                  <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Title */}
+              <h3 className="font-heading text-xl font-semibold mb-4 text-gray-900">
+                Cash on Delivery Information
+              </h3>
+
+              {/* Message */}
+              <div className="font-body text-gray-600 mb-6 text-left">
+                <p className="mb-3">
+                  <strong>COD orders</strong> take <strong>15-17 days</strong> for delivery.
+                </p>
+                <p className="mb-3">
+                  <strong>Prepaid orders</strong> arrive in <strong>6-7 days</strong>.
+                </p>
+                <p className="text-sm text-gray-500">
+                  Choose prepaid payment for faster delivery!
+                </p>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowCODConfirmModal(false)}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg font-heading font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCODConfirmModal(false)
+                    handleCODOrder()
+                  }}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-heading font-medium transition-colors"
+                >
+                  Place Order
+                </button>
               </div>
             </div>
           </div>

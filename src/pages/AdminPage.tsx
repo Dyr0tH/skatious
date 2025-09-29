@@ -47,8 +47,10 @@ interface Order {
   created_at: string
   user_id: string
   customer_name?: string
+  payment_method: string | null
   order_items: {
     product_name: string
+    product_image_url: string | null
     size: string
     quantity: number
     item_total: number
@@ -83,6 +85,42 @@ export default function AdminPage() {
   const [editingItem, setEditingItem] = useState<any>(null)
   const [customers, setCustomers] = useState<any[]>([])
   const [customerSearch, setCustomerSearch] = useState('')
+  
+  // Search and filter states
+  const [orderSearch, setOrderSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [productSearch, setProductSearch] = useState('')
+  const [productStockFilter, setProductStockFilter] = useState('all')
+  const [productCategoryFilter, setProductCategoryFilter] = useState('all')
+
+  // Filter orders based on search and status
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = orderSearch === '' || 
+      order.customer_name?.toLowerCase().includes(orderSearch.toLowerCase()) ||
+      order.customer_email?.toLowerCase().includes(orderSearch.toLowerCase()) ||
+      order.order_number?.toLowerCase().includes(orderSearch.toLowerCase()) ||
+      order.customer_mobile?.includes(orderSearch)
+    
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter
+    
+    return matchesSearch && matchesStatus
+  })
+
+  // Filter products based on search, stock status, and category
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = productSearch === '' || 
+      product.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+      product.description?.toLowerCase().includes(productSearch.toLowerCase())
+    
+    const matchesStock = productStockFilter === 'all' || 
+      (productStockFilter === 'in_stock' && product.in_stock) ||
+      (productStockFilter === 'out_of_stock' && !product.in_stock)
+    
+    const matchesCategory = productCategoryFilter === 'all' || 
+      product.category_id === productCategoryFilter
+    
+    return matchesSearch && matchesStock && matchesCategory
+  })
 
   const [categoryForm, setCategoryForm] = useState({ name: '', description: '' })
   const [productForm, setProductForm] = useState({
@@ -176,7 +214,7 @@ export default function AdminPage() {
       // Fetch order items for all orders
       const { data: orderItemsData, error: itemsError } = await supabase
         .from('order_items')
-        .select('*')
+        .select('order_id, product_name, product_image_url, size, quantity, item_total')
         .in('order_id', orderIds)
 
       if (itemsError) {
@@ -588,7 +626,43 @@ export default function AdminPage() {
             <div className="flex justify-between items-center">
               <h2 className="font-heading text-xl font-semibold text-gray-900">Orders Management</h2>
               <div className="text-sm text-gray-600 font-body">
-                {orders.length} total orders
+                {filteredOrders.length} of {orders.length} orders
+              </div>
+            </div>
+
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm">
+              <div className="flex-1 w-full sm:max-w-md">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search orders by customer name, order number, or email..."
+                    value={orderSearch}
+                    onChange={(e) => setOrderSearch(e.target.value)}
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 font-heading">Filter by Status:</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                >
+                  <option value="all">All Status</option>
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -618,7 +692,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {orders.map((order) => (
+                    {filteredOrders.map((order) => (
                       <tr key={order.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="font-medium text-gray-900 font-heading">#{order.order_number}</div>
@@ -688,6 +762,57 @@ export default function AdminPage() {
               </button>
             </div>
 
+            {/* Search and Filter Bar */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search products by name or description..."
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div>
+                  <select
+                    value={productStockFilter}
+                    onChange={(e) => setProductStockFilter(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                  >
+                    <option value="all">All Stock Status</option>
+                    <option value="in_stock">In Stock</option>
+                    <option value="out_of_stock">Out of Stock</option>
+                  </select>
+                </div>
+
+                <div>
+                  <select
+                    value={productCategoryFilter}
+                    onChange={(e) => setProductCategoryFilter(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-body"
+                  >
+                    <option value="all">All Categories</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="text-sm text-gray-600 flex items-center font-body">
+                  {filteredProducts.length} of {products.length} products
+                </div>
+              </div>
+            </div>
+
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -714,7 +839,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {products.map((product) => (
+                    {filteredProducts.map((product) => (
                       <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
                         <td className="px-6 py-4">
                           <div className="flex items-start space-x-3">
@@ -784,20 +909,30 @@ export default function AdminPage() {
                 </table>
               </div>
               
-              {products.length === 0 && (
+              {filteredProducts.length === 0 && (
                 <div className="text-center py-12">
                   <Package className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900 font-heading">No products</h3>
-                  <p className="mt-1 text-sm text-gray-500 font-body">Get started by creating a new product.</p>
-                  <div className="mt-6">
-                    <button
-                      onClick={() => setShowProductForm(true)}
-                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Product
-                    </button>
-                  </div>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900 font-heading">
+                    {productSearch || productStockFilter !== 'all' || productCategoryFilter !== 'all' 
+                      ? 'No products match your search criteria' 
+                      : 'No products'}
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500 font-body">
+                    {productSearch || productStockFilter !== 'all' || productCategoryFilter !== 'all' 
+                      ? 'Try adjusting your search or filter criteria.' 
+                      : 'Get started by creating a new product.'}
+                  </p>
+                  {!(productSearch || productStockFilter !== 'all' || productCategoryFilter !== 'all') && (
+                    <div className="mt-6">
+                      <button
+                        onClick={() => setShowProductForm(true)}
+                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Product
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1047,6 +1182,26 @@ export default function AdminPage() {
                   </select>
                 </div>
 
+                {/* Payment Method */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 font-heading mb-2">
+                    Payment Method
+                  </label>
+                  <div className={`px-4 py-3 border-2 rounded-lg font-semibold text-center ${
+                    selectedOrder.payment_method === 'cod' 
+                      ? 'bg-orange-50 border-orange-300 text-orange-800' 
+                      : selectedOrder.payment_method === 'razorpay' 
+                      ? 'bg-green-50 border-green-300 text-green-800'
+                      : 'bg-gray-50 border-gray-300 text-gray-800'
+                  }`}>
+                    <span className="font-body text-lg">
+                      {selectedOrder.payment_method === 'cod' ? '💰 Cash on Delivery (COD)' : 
+                       selectedOrder.payment_method === 'razorpay' ? '💳 Online Payment (Razorpay)' : 
+                       '❓ ' + (selectedOrder.payment_method || 'Not specified')}
+                    </span>
+                  </div>
+                </div>
+
                 {/* Customer Information */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
@@ -1079,10 +1234,27 @@ export default function AdminPage() {
                   <h4 className="font-heading text-lg font-semibold text-gray-900 mb-3">Order Items</h4>
                   <div className="bg-gray-50 rounded-lg p-4">
                     {selectedOrder.order_items.map((item, index) => (
-                      <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                        <span className="font-body text-gray-700">
-                          {item.product_name} ({item.size}) × {item.quantity}
-                        </span>
+                      <div key={index} className="flex items-center justify-between py-3 border-b border-gray-200 last:border-b-0">
+                        <div className="flex items-center space-x-3">
+                          {/* Product Image */}
+                          <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                            {item.product_image_url ? (
+                              <img
+                                src={item.product_image_url}
+                                alt={item.product_name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                                <Package className="h-6 w-6 text-gray-500" />
+                              </div>
+                            )}
+                          </div>
+                          {/* Product Details */}
+                          <span className="font-body text-gray-700">
+                            {item.product_name} ({item.size}) × {item.quantity}
+                          </span>
+                        </div>
                         <span className="font-semibold">₹{item.item_total.toFixed(2)}</span>
                       </div>
                     ))}
